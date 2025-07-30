@@ -10,9 +10,9 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowTitle('Slower');
-    setWindowMinSize(const Size(1200, 440));
-    setWindowMaxSize(const Size(10000, 440));
-    setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 440)); 
+    setWindowMinSize(const Size(800, 340));
+    setWindowMaxSize(const Size(10000, 340));
+    setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 340)); 
   }
   runApp(const ChorderApp());
 }
@@ -224,225 +224,247 @@ class _PianoPageState extends State<PianoPage> {
       child: Focus(
         autofocus: true,
         child: Scaffold(
-          backgroundColor: const Color(0xFFF5F5F7),
+          backgroundColor: const Color(0xFF2B2B2B), // Logic Pro dark gray background
 
       body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              // Piano keyboard - centered with responsive sizing in dark container
-              Center(
-                child: Container(
-                  width: double.infinity,
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.95,
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: PianoKeyboard(
-                    onKeyPressed: _playNoteWithIntervals,
-                    activeNotes: _activeNotes,
-                    scaleNotes: _currentScaleNotes.toSet(),
-                  ),
+        child: Column(
+          children: [
+            // Piano keyboard - full width dark container at top
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(
+                left: 0,
+                right: 0,
+                top: 48,
+                bottom: 6,
+              ),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF404040),
+                    Color(0xFF2A2A2A),
+                    Color(0xFF151515),
+                    Color(0xFF000000),
+                    Color(0xFF0A0A0A),
+                    Color(0xFF1A1A1A),
+                  ],
+                  stops: [0.0, 0.2, 0.5, 0.7, 0.9, 1.0],
                 ),
               ),
-              const SizedBox(height: 30),
-              // Interval controls with modern card design
-              Container(
-                width: double.infinity,
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * .95,
-                ),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+              child: PianoKeyboard(
+                onKeyPressed: _playNoteWithIntervals,
+                activeNotes: _activeNotes,
+                scaleNotes: _currentScaleNotes.toSet(),
+              ),
+            ),
+            // Controls section with padding
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const SizedBox(height: 4),
+                  // Interval controls with subtle Logic Pro style design
+                  Container(
+                    width: double.infinity,
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * .95,
                     ),
-                  ],
-                ),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF393939), // Logic Pro panel gray
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: const Color(0xFF4A4A4A),
+                        width: 0.5,
+                      ),
+                    ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Key and Mode selection
-                    Text(
-                      'SELECT KEY AND MODE',
-                      style: TextStyle(
-                        color: const Color(0xFFF9931A),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    // Single row layout with Key & Mode on left, Intervals on right
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Key dropdown
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Key',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey.shade300),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedKey,
-                                    isExpanded: true,
-                                    items: _keys.map((String key) {
-                                      return DropdownMenuItem<String>(
-                                        value: key,
-                                        child: Text(key),
-                                      );
-                                    }).toList(),
-                                    onChanged: (String? newValue) {
-                                      if (newValue != null) {
-                                        setState(() {
-                                          _selectedKey = newValue;
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        // Mode dropdown
+                        // Left side: Key and Mode selection
                         Expanded(
                           flex: 2,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Mode',
+                                'Key & Mode',
                                 style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 14,
+                                  color: const Color(0xFFF9931A),
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey.shade300),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedMode,
-                                    isExpanded: true,
-                                    items: _modes.map((String mode) {
-                                      return DropdownMenuItem<String>(
-                                        value: mode,
-                                        child: Text(
-                                          mode,
-                                          style: const TextStyle(fontSize: 14),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  // Key dropdown
+                                  Expanded(
+                                    child: Container(
+                                      height: 28,
+                                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2F2F2F),
+                                        border: Border.all(color: const Color(0xFF5A5A5A), width: 0.5),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          value: _selectedKey,
+                                          isExpanded: true,
+                                          isDense: true,
+                                          style: const TextStyle(
+                                            color: Color(0xFFE5E5E5),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                          dropdownColor: const Color(0xFF2F2F2F),
+                                          items: _keys.map((String key) {
+                                            return DropdownMenuItem<String>(
+                                              value: key,
+                                              child: Container(
+                                                height: 20,
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(key),
+                                              ),
+                                            );
+                                          }).toList(),
+                                          onChanged: (String? newValue) {
+                                            if (newValue != null) {
+                                              setState(() {
+                                                _selectedKey = newValue;
+                                              });
+                                            }
+                                          },
                                         ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (String? newValue) {
-                                      if (newValue != null) {
-                                        setState(() {
-                                          _selectedMode = newValue;
-                                        });
-                                      }
-                                    },
+                                      ),
+                                    ),
                                   ),
+                                  const SizedBox(width: 12),
+                                  // Mode dropdown
+                                  Expanded(
+                                    flex: 2,
+                                    child: Container(
+                                      height: 28,
+                                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2F2F2F),
+                                        border: Border.all(color: const Color(0xFF5A5A5A), width: 0.5),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          value: _selectedMode,
+                                          isExpanded: true,
+                                          isDense: true,
+                                          style: const TextStyle(
+                                            color: Color(0xFFE5E5E5),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                          dropdownColor: const Color(0xFF2F2F2F),
+                                          items: _modes.map((String mode) {
+                                            return DropdownMenuItem<String>(
+                                              value: mode,
+                                              child: Container(
+                                                height: 20,
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(mode),
+                                              ),
+                                            );
+                                          }).toList(),
+                                          onChanged: (String? newValue) {
+                                            if (newValue != null) {
+                                              setState(() {
+                                                _selectedMode = newValue;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        // Right side: Intervals
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Intervals',
+                                style: TextStyle(
+                                  color: const Color(0xFFF9931A),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.3,
                                 ),
+                              ),
+                              const SizedBox(height: 10),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                children: [
+                                  _buildModernIntervalCheckbox(
+                                    'Minor 3rd',
+                                    _minorThird,
+                                    (value) => setState(() => _minorThird = value ?? false),
+                                  ),
+                                  _buildModernIntervalCheckbox(
+                                    'Major 3rd',
+                                    _majorThird,
+                                    (value) => setState(() => _majorThird = value ?? false),
+                                  ),
+                                  _buildModernIntervalCheckbox(
+                                    'Perfect 5th',
+                                    _perfectFifth,
+                                    (value) => setState(() => _perfectFifth = value ?? false),
+                                  ),
+                                  _buildModernIntervalCheckbox(
+                                    'Minor 7th',
+                                    _minorSeventh,
+                                    (value) => setState(() => _minorSeventh = value ?? false),
+                                  ),
+                                  _buildModernIntervalCheckbox(
+                                    'Major 7th',
+                                    _majorSeventh,
+                                    (value) => setState(() => _majorSeventh = value ?? false),
+                                  ),
+                                  _buildModernIntervalCheckbox(
+                                    'Ninth',
+                                    _ninth,
+                                    (value) => setState(() => _ninth = value ?? false),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
-
-                    Text(
-                      'SELECT INTERVALS TO PLAY WITH EACH NOTE',
-                      style: TextStyle(
-                        color: const Color(0xFFF9931A),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: [
-                        _buildModernIntervalCheckbox(
-                          'Minor 3rd',
-                          _minorThird,
-                          (value) => setState(() => _minorThird = value ?? false),
-                        ),
-                        _buildModernIntervalCheckbox(
-                          'Major 3rd',
-                          _majorThird,
-                          (value) => setState(() => _majorThird = value ?? false),
-                        ),
-                        _buildModernIntervalCheckbox(
-                          'Perfect 5th',
-                          _perfectFifth,
-                          (value) => setState(() => _perfectFifth = value ?? false),
-                        ),
-                        _buildModernIntervalCheckbox(
-                          'Minor 7th',
-                          _minorSeventh,
-                          (value) => setState(() => _minorSeventh = value ?? false),
-                        ),
-                        _buildModernIntervalCheckbox(
-                          'Major 7th',
-                          _majorSeventh,
-                          (value) => setState(() => _majorSeventh = value ?? false),
-                        ),
-                        _buildModernIntervalCheckbox(
-                          'Ninth',
-                          _ninth,
-                          (value) => setState(() => _ninth = value ?? false),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 40),
-            ],
-          ),
+              const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      ),
+        ),
       ),
     );
   }
@@ -454,49 +476,49 @@ class _PianoPageState extends State<PianoPage> {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: value ? const Color(0xFF1E90FF).withOpacity(0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        color: value ? const Color(0xFF0084EF).withValues(alpha: 0.15) : const Color(0xFF2F2F2F),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: value ? const Color(0xFF1E90FF) : Colors.grey.shade300,
-          width: 1.5,
+          color: value ? const Color(0xFF0084EF) : const Color(0xFF5A5A5A),
+          width: 0.5,
         ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
           onTap: () => onChanged(!value),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 20,
-                  height: 20,
+                  width: 14,
+                  height: 14,
                   decoration: BoxDecoration(
-                    color: value ? const Color(0xFF1E90FF) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(4),
+                    color: value ? const Color(0xFF0084EF) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(2),
                     border: Border.all(
-                      color: value ? const Color(0xFF1E90FF) : Colors.grey.shade400,
-                      width: 2,
+                      color: value ? const Color(0xFF0084EF) : const Color(0xFF7A7A7A),
+                      width: 1,
                     ),
                   ),
                   child: value
                       ? const Icon(
                           Icons.check,
                           color: Colors.white,
-                          size: 14,
+                          size: 10,
                         )
                       : null,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 6),
                 Text(
                   label,
                   style: TextStyle(
-                    color: value ? const Color(0xFF1E90FF) : Colors.grey.shade700,
-                    fontSize: 14,
-                    fontWeight: value ? FontWeight.w600 : FontWeight.w500,
+                    color: value ? const Color(0xFFE5E5E5) : const Color(0xFFB8B8B8),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
