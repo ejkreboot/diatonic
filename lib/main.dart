@@ -235,7 +235,7 @@ class _PianoPageState extends State<PianoPage> {
               padding: const EdgeInsets.only(
                 left: 0,
                 right: 0,
-                top: 48,
+                top: 0,
                 bottom: 6,
               ),
               decoration: const BoxDecoration(
