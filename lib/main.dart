@@ -9,7 +9,7 @@ import 'models/scales.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    setWindowTitle('Slower');
+    setWindowTitle('Chorder');
     setWindowMinSize(const Size(800, 340));
     setWindowMaxSize(const Size(10000, 340));
     setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 340)); 
