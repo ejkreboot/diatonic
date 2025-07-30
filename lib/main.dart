@@ -10,9 +10,9 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowTitle('Chorder');
-    setWindowMinSize(const Size(800, 340));
-    setWindowMaxSize(const Size(10000, 340));
-    setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 340)); 
+    setWindowMinSize(const Size(800, 360));
+    setWindowMaxSize(const Size(10000, 380));
+    setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 360));
   }
   runApp(const ChorderApp());
 }
@@ -64,6 +64,13 @@ class _PianoPageState extends State<PianoPage> {
 
   // Active notes for animation
   Set<String> _activeNotes = {};
+  
+  // Track currently pressed keys to avoid clearing while held
+  Set<String> _pressedKeys = {};
+  Set<LogicalKeyboardKey> _pressedKeyboardKeys = {};
+  
+  // Map keyboard keys to their triggered notes for proper release tracking
+  Map<LogicalKeyboardKey, String> _keyboardToNoteMap = {};
 
   // Get current scale notes
   List<String> get _currentScaleNotes => Scales.getScaleNotes(_selectedKey, _selectedMode);
@@ -78,33 +85,54 @@ class _PianoPageState extends State<PianoPage> {
   }
 
   void _playNoteWithIntervals(String note) {
+    // Add this note to pressed keys
+    _pressedKeys.add(note);
+    
     // Calculate interval notes
     final notesToPlay = <String>[note]; // Start with the base note
     
     // Add intervals if enabled
     if (_minorThird) {
       final intervalNote = _getIntervalNote(note, 3);
-      if (intervalNote != null) notesToPlay.add(intervalNote);
+      if (intervalNote != null) {
+        notesToPlay.add(intervalNote);
+        _pressedKeys.add(intervalNote);
+      }
     }
     if (_majorThird) {
       final intervalNote = _getIntervalNote(note, 4);
-      if (intervalNote != null) notesToPlay.add(intervalNote);
+      if (intervalNote != null) {
+        notesToPlay.add(intervalNote);
+        _pressedKeys.add(intervalNote);
+      }
     }
     if (_perfectFifth) {
       final intervalNote = _getIntervalNote(note, 7);
-      if (intervalNote != null) notesToPlay.add(intervalNote);
+      if (intervalNote != null) {
+        notesToPlay.add(intervalNote);
+        _pressedKeys.add(intervalNote);
+      }
     }
     if (_minorSeventh) {
       final intervalNote = _getIntervalNote(note, 10);
-      if (intervalNote != null) notesToPlay.add(intervalNote);
+      if (intervalNote != null) {
+        notesToPlay.add(intervalNote);
+        _pressedKeys.add(intervalNote);
+      }
     }
     if (_majorSeventh) {
       final intervalNote = _getIntervalNote(note, 11);
-      if (intervalNote != null) notesToPlay.add(intervalNote);
+      if (intervalNote != null) {
+        notesToPlay.add(intervalNote);
+        _pressedKeys.add(intervalNote);
+      }
     }
     if (_ninth) {
       final intervalNote = _getIntervalNote(note, 14);
-      if (intervalNote != null) notesToPlay.add(intervalNote);
+      if (intervalNote != null) {
+        notesToPlay.add(intervalNote);
+        _pressedKeys.add(intervalNote);
+      }
     }
     
     // Animate the keys
@@ -123,14 +151,52 @@ class _PianoPageState extends State<PianoPage> {
       ninthNote: notesToPlay.length > 1 && _ninth ? _getIntervalNote(note, 14) : null,
     );
     
-    // Clear the animation after a delay
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
+    // Schedule clearing, but only if no keys are still pressed
+    _scheduleNoteClear();
+  }
+  
+  void _scheduleNoteClear() {
+    Future.delayed(const Duration(milliseconds: 10), () {
+      if (mounted && _pressedKeys.isEmpty && _pressedKeyboardKeys.isEmpty) {
         setState(() {
           _activeNotes = {};
         });
       }
     });
+  }
+  
+  void _releaseNote(String note) {
+    // Remove the note and its intervals from pressed keys
+    _pressedKeys.remove(note);
+    
+    // Also remove any interval notes that might have been triggered with this root note
+    if (_minorThird) {
+      final intervalNote = _getIntervalNote(note, 3);
+      if (intervalNote != null) _pressedKeys.remove(intervalNote);
+    }
+    if (_majorThird) {
+      final intervalNote = _getIntervalNote(note, 4);
+      if (intervalNote != null) _pressedKeys.remove(intervalNote);
+    }
+    if (_perfectFifth) {
+      final intervalNote = _getIntervalNote(note, 7);
+      if (intervalNote != null) _pressedKeys.remove(intervalNote);
+    }
+    if (_minorSeventh) {
+      final intervalNote = _getIntervalNote(note, 10);
+      if (intervalNote != null) _pressedKeys.remove(intervalNote);
+    }
+    if (_majorSeventh) {
+      final intervalNote = _getIntervalNote(note, 11);
+      if (intervalNote != null) _pressedKeys.remove(intervalNote);
+    }
+    if (_ninth) {
+      final intervalNote = _getIntervalNote(note, 14);
+      if (intervalNote != null) _pressedKeys.remove(intervalNote);
+    }
+    
+    // Schedule clearing if no keys are pressed
+    _scheduleNoteClear();
   }
 
   void _handleKeyPress(KeyEvent event) {
@@ -150,69 +216,93 @@ class _PianoPageState extends State<PianoPage> {
         return baseNote;
       }
       
+      // Track the pressed keyboard key
+      _pressedKeyboardKeys.add(event.logicalKey);
+      
+      String? noteToPlay;
+      
       switch (event.logicalKey) {
         // White keys - C3 octave (C4 if shift pressed)
         case LogicalKeyboardKey.keyA:
-          _playNoteWithIntervals(getNote('C3'));
+          noteToPlay = getNote('C3');
           break;
         case LogicalKeyboardKey.keyS:
-          _playNoteWithIntervals(getNote('D3'));
+          noteToPlay = getNote('D3');
           break;
         case LogicalKeyboardKey.keyD:
-          _playNoteWithIntervals(getNote('E3'));
+          noteToPlay = getNote('E3');
           break;
         case LogicalKeyboardKey.keyF:
-          _playNoteWithIntervals(getNote('F3'));
+          noteToPlay = getNote('F3');
           break;
         case LogicalKeyboardKey.keyG:
-          _playNoteWithIntervals(getNote('G3'));
+          noteToPlay = getNote('G3');
           break;
         case LogicalKeyboardKey.keyH:
-          _playNoteWithIntervals(getNote('A3'));
+          noteToPlay = getNote('A3');
           break;
         case LogicalKeyboardKey.keyJ:
-          _playNoteWithIntervals(getNote('B3'));
+          noteToPlay = getNote('B3');
           break;
         
         // Black keys - C3 octave (C4 if shift pressed)
         case LogicalKeyboardKey.keyW:
-          _playNoteWithIntervals(getNote('C#3'));
+          noteToPlay = getNote('C#3');
           break;
         case LogicalKeyboardKey.keyE:
-          _playNoteWithIntervals(getNote('D#3'));
+          noteToPlay = getNote('D#3');
           break;
         case LogicalKeyboardKey.keyT:
-          _playNoteWithIntervals(getNote('F#3'));
+          noteToPlay = getNote('F#3');
           break;
         case LogicalKeyboardKey.keyY:
-          _playNoteWithIntervals(getNote('G#3'));
+          noteToPlay = getNote('G#3');
           break;
         case LogicalKeyboardKey.keyU:
-          _playNoteWithIntervals(getNote('A#3'));
+          noteToPlay = getNote('A#3');
           break;
         
         // White keys - C4 octave continuation (C5 if shift pressed)
         case LogicalKeyboardKey.keyK:
-          _playNoteWithIntervals(getNote('C4'));
+          noteToPlay = getNote('C4');
           break;
         case LogicalKeyboardKey.keyL:
-          _playNoteWithIntervals(getNote('D4'));
+          noteToPlay = getNote('D4');
           break;
         case LogicalKeyboardKey.semicolon:
-          _playNoteWithIntervals(getNote('E4'));
+          noteToPlay = getNote('E4');
           break;
         case LogicalKeyboardKey.quoteSingle:
-          _playNoteWithIntervals(getNote('F4'));
+          noteToPlay = getNote('F4');
           break;
         
         // Black keys - C4 octave continuation (C5 if shift pressed)
         case LogicalKeyboardKey.keyO:
-          _playNoteWithIntervals(getNote('C#4'));
+          noteToPlay = getNote('C#4');
           break;
         case LogicalKeyboardKey.keyP:
-          _playNoteWithIntervals(getNote('D#4'));
+          noteToPlay = getNote('D#4');
           break;
       }
+      
+      if (noteToPlay != null) {
+        // Map this keyboard key to the note it triggered
+        _keyboardToNoteMap[event.logicalKey] = noteToPlay;
+        _playNoteWithIntervals(noteToPlay);
+      }
+    } else if (event is KeyUpEvent) {
+      // Remove the released key from pressed keys
+      _pressedKeyboardKeys.remove(event.logicalKey);
+      
+      // If this key was mapped to a note, release that note
+      final releasedNote = _keyboardToNoteMap[event.logicalKey];
+      if (releasedNote != null) {
+        _keyboardToNoteMap.remove(event.logicalKey);
+        _releaseNote(releasedNote);
+      }
+      
+      // Schedule clearing if no keys are pressed
+      _scheduleNoteClear();
     }
   }
 
@@ -255,6 +345,7 @@ class _PianoPageState extends State<PianoPage> {
               ),
               child: PianoKeyboard(
                 onKeyPressed: _playNoteWithIntervals,
+                onKeyReleased: _releaseNote,
                 activeNotes: _activeNotes,
                 scaleNotes: _currentScaleNotes.toSet(),
               ),

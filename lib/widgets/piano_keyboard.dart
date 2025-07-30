@@ -3,12 +3,14 @@ import 'dart:math' as math;
 
 class PianoKeyboard extends StatefulWidget {
   final void Function(String note) onKeyPressed;
+  final void Function(String note)? onKeyReleased;
   final Set<String> activeNotes;
   final Set<String> scaleNotes;
 
   const PianoKeyboard({
     super.key, 
     required this.onKeyPressed,
+    this.onKeyReleased,
     this.activeNotes = const {},
     this.scaleNotes = const {},
   });
@@ -36,8 +38,8 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
     return LayoutBuilder(
       builder: (context, constraints) {
         // Account for padding and cheek blocks in width calculations
-        const containerPadding = 0.0; // Eliminated horizontal padding completely
-        const cheekBlockWidth = 48.0; // Increased from 32.0 to 48.0 for wider cheek blocks
+        const containerPadding = 0.0;
+        const cheekBlockWidth = 48.0;
         final actualAvailableWidth = constraints.maxWidth;
         final keyAreaWidth = actualAvailableWidth - (containerPadding * 2) - (cheekBlockWidth * 2);
         
@@ -54,23 +56,21 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color.fromARGB(255, 47, 47, 47), // Darker starting metallic gray at top-left
-                Color.fromARGB(255, 58, 58, 58), // Medium metallic gray
-                Color(0xFF2A2A2A), // Darker metallic gray
-                Color(0xFF1A1A1A), // Deep charcoal
-                Color(0xFF0A0A0A), // Very dark charcoal at center-right
+                Color.fromARGB(255, 47, 47, 47),
+                Color.fromARGB(255, 58, 58, 58),
+                Color(0xFF2A2A2A),
+                Color(0xFF1A1A1A),
+                Color(0xFF0A0A0A),
               ],
               transform: GradientRotation(5 * math.pi / 180),
             ),
             borderRadius: BorderRadius.circular(containerRadius),
             boxShadow: [
-              // Deep outer shadow
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
-              // Subtle inner highlight
               BoxShadow(
                 color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 6,
@@ -79,87 +79,82 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.only(top: 48.0, bottom: 10.0), // Add 48px top padding, keep bottom padding
+            padding: const EdgeInsets.only(top: 48.0, bottom: 10.0),
             child: AspectRatio(
-              aspectRatio: whiteKeyCount / 4.6, // Restore proportional height based on key count
+              aspectRatio: whiteKeyCount / 4.6,
               child: Row(
                 children: [
-                // Left cheek block
-                Container(
-                  width: 48, // Increased width to match cheekBlockWidth
-                  height: double.infinity, // Take full available height
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(bottomRight: Radius.circular(10)),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF4A4A4A), // Light charcoal at top-left
-                        Color(0xFF3A3A3A), // Medium charcoal
-                        Color(0xFF2A2A2A), // Darker charcoal
-                        Color(0xFF1A1A1A), // Dark charcoal at bottom-right
-                      ],
-                      stops: [0.0, 0.3, 0.7, 1.0],
-                    ),
-                    boxShadow: [
-                      // Main dimensional shadow
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        blurRadius: 8,
-                        offset: const Offset(3, 3),
+                  // Left cheek block
+                  Container(
+                    width: 48,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(bottomRight: Radius.circular(10)),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF4A4A4A),
+                          Color(0xFF3A3A3A),
+                          Color(0xFF2A2A2A),
+                          Color(0xFF1A1A1A),
+                        ],
+                        stops: [0.0, 0.3, 0.7, 1.0],
                       ),
-                      // Additional depth shadow
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(1, 1),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    child: Stack(
-                      children: [
-                        // Shadow overlay from case above
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: 20, // Shadow depth from case above
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.4), // Stronger shadow at top
-                                  Colors.black.withValues(alpha: 0.2),
-                                  Colors.black.withValues(alpha: 0.0), // Fade to transparent
-                                ],
-                                stops: const [0.0, 0.6, 1.0],
-                              ),
-                            ),
-                          ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          blurRadius: 8,
+                          offset: const Offset(3, 3),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          offset: const Offset(1, 1),
                         ),
                       ],
                     ),
+                    child: ClipRRect(
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 20,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.4),
+                                    Colors.black.withValues(alpha: 0.2),
+                                    Colors.black.withValues(alpha: 0.0),
+                                  ],
+                                  stops: const [0.0, 0.6, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                // Main keyboard area
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
+                  // Main keyboard area
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(0),
                       ),
                       child: LayoutBuilder(
                         builder: (context, keyboardConstraints) {
-                          // Recalculate dimensions based on actual available space
                           final actualKeyAreaWidth = keyboardConstraints.maxWidth;
                           final actualKeyHeight = keyboardConstraints.maxHeight;
                           final actualWhiteKeyWidth = actualKeyAreaWidth / whiteKeyCount;
                           final actualBlackKeyWidth = actualWhiteKeyWidth * 0.55;
                           final actualBlackKeyHeight = actualKeyHeight * 0.65;
                           
-                          // Build both white and black keys with correct positioning
                           final whiteKeys = <Widget>[];
                           final blackKeys = <Widget>[];
                           int whiteKeyIndex = 0;
@@ -172,23 +167,17 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                             final isInScale = widget.scaleNotes.contains(noteWithoutOctave);
                             
                             if (!isBlackKey) {
-                              // White key with realistic gradient and shadows
-                              whiteKeys.add(AnimatedContainer(
-                                duration: const Duration(milliseconds: 100),
-                                height: actualKeyHeight,
+                              whiteKeys.add(GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTapDown: (_) => widget.onKeyPressed(note),
+                                onTapUp: (_) => widget.onKeyReleased?.call(note),
+                                onTapCancel: () => widget.onKeyReleased?.call(note),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 100),
+                                  height: actualKeyHeight,
                                 decoration: BoxDecoration(
-                                  gradient: isActive 
-                                    ? LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          const Color(0xFFE8E8E8),
-                                          const Color(0xFFD5D5D5),
-                                          const Color(0xFFCCCCCC),
-                                        ],
-                                        stops: const [0.0, 0.7, 1.0],
-                                      )
-                                    : LinearGradient(
+                                  border: isActive ? Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 1), width: 0.5)) : null,
+                                  gradient: LinearGradient(
                                         begin: Alignment.topCenter,
                                         end: Alignment.bottomCenter,
                                         colors: [
@@ -197,19 +186,12 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                           const Color(0xFFE8E8E8),
                                         ],
                                         stops: const [0.0, 0.8, 1.0],
-                                      ),
+                                  ),
                                   borderRadius: BorderRadius.only(
                                     bottomLeft: Radius.circular(keyRadius),
                                     bottomRight: Radius.circular(keyRadius),
                                   ),
                                   boxShadow: [
-                                    // Main shadow
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.15),
-                                      blurRadius: isActive ? 8 : 2,
-                                      offset: isActive ? const Offset(0, 4) : const Offset(0, 2),
-                                    ),
-                                    // Subtle ambient shadow
                                     BoxShadow(
                                       color: Colors.grey.withValues(alpha: 0.4),
                                       blurRadius: 2,
@@ -225,77 +207,94 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                       bottom: BorderSide(color: Colors.grey.shade900, width: 1.0),
                                     ),
                                   ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTapDown: (_) => widget.onKeyPressed(note),
-                                      borderRadius: BorderRadius.only(
-                                        bottomLeft: Radius.circular(keyRadius),
-                                        bottomRight: Radius.circular(keyRadius),
-                                      ),
-                                      child: Stack(
-                                        children: [
-                                          // Subtle highlight at top
-                                          
-                                          // Thin bottom border for scale notes (white keys)
-                                          if (isInScale)
-                                          Positioned(
-                                            bottom: -1,
-                                            left: 0,
-                                            right: 0,
-                                            child: Container(
-                                              height: 4,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0x660084EF),
-                                                borderRadius: BorderRadius.only(
-                                                  bottomLeft: Radius.circular(keyRadius),
-                                                  bottomRight: Radius.circular(keyRadius),
-                                                ),
+                                  child: Stack(
+                                    children: [
+                                      // Nneighbor shadows (cast onto this key when it's pressed)
+                                      if (isActive)
+                                        Positioned(
+                                          top: 0,
+                                          right: 0,
+                                          bottom: 0,
+                                          width: whiteKeyWidth,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.centerLeft,
+                                                end: Alignment.centerRight,
+                                                colors: [
+                                                  Colors.black.withValues(alpha: 0.6),
+                                                  Colors.black.withValues(alpha: 0.1),
+                                                  Colors.black.withValues(alpha: 0.01),
+                                                  Colors.black.withValues(alpha: 0.0),
+                                                  Colors.black.withValues(alpha: 0.01),
+                                                  Colors.black.withValues(alpha: 0.1),
+                                                  Colors.black.withValues(alpha: 0.6),
+                                                ],
+                                                stops: const [0.0, 0.25, 0.35, 0.5, 0.65, 0.75, 1.0],
                                               ),
                                             ),
                                           ),
-                                        ],
+                                        ),
+                                      // Scale indication
+                                      if (isInScale)
+                                      Positioned(
+                                        bottom: -1,
+                                        left: 0,
+                                        right: 0,
+                                        child: Container(
+                                          height: 4,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0x660084EF),
+                                            borderRadius: BorderRadius.only(
+                                              bottomLeft: Radius.circular(keyRadius),
+                                              bottomRight: Radius.circular(keyRadius),
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ),
+                              ),
                               ));
                               whiteKeyIndex++;
                             } else {
                               final blackKeyLeft = (whiteKeyIndex * actualWhiteKeyWidth) - (actualBlackKeyWidth / 2);
-                              
                               blackKeys.add(Positioned(
                                 left: blackKeyLeft,
                                 width: actualBlackKeyWidth,
-                                height: actualBlackKeyHeight,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 100),
+                                height: isActive ? 1 * actualBlackKeyHeight : actualBlackKeyHeight,
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTapDown: (_) => widget.onKeyPressed(note),
+                                  onTapUp: (_) => widget.onKeyReleased?.call(note),
+                                  onTapCancel: () => widget.onKeyReleased?.call(note),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 100),
                                   decoration: BoxDecoration(
-                                    gradient: isActive
-                                      ? LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            const Color(0xFF2A2A2A),
-                                            const Color(0xFF1A1A1A),
-                                            const Color(0xFF0A0A0A),
-                                          ],
-                                          stops: const [0.0, 0.6, 1.0],
-                                        )
-                                      : RadialGradient(
-                                          center: Alignment(0,-0.15),
-                                          radius: 3.0,
-                                          colors: [
-                                            const Color.fromARGB(255, 45, 45, 45),
-                                            const Color(0xFF2A2A2A),
-                                            const Color(0xFF1A1A1A),
-                                            const Color.fromARGB(255, 51, 51, 53),
-                                            const Color.fromARGB(255, 79, 79, 79),
-                                            const Color(0xFF1A1A1B),
-                                            const Color(0xFF000000),
-                                          ],
-                                          stops: const [0.0, 0.3, 0.5, 0.84, 0.87, 0.92, .921],
-                                        ),
+                                    gradient: RadialGradient(
+                                      center: Alignment(0, -0.15),
+                                      radius: 3.0,
+                                      colors: [
+                                        const Color.fromARGB(255, 45, 45, 45),
+                                        const Color(0xFF2A2A2A),
+                                        const Color(0xFF1A1A1A),
+                                        const Color.fromARGB(255, 51, 51, 53),
+                                        const Color.fromARGB(255, 79, 79, 79),
+                                        const Color(0xFF1A1A1B),
+                                        const Color.fromARGB(255, 56, 56, 56),
+                                        const Color(0xFF000000),
+
+                                      ],
+                                      stops: [0.0, 
+                                              0.3, 
+                                              0.5, 
+                                              isActive ? 0.80 : 0.84, 
+                                              isActive ? 0.85 : 0.87, 
+                                              isActive ? 0.90 : 0.92, 
+                                              isActive ? 0.90 : 0.921,
+                                              isActive ? 0.95 :  1.0]
+                                    ),
                                     borderRadius: BorderRadius.only(
                                       bottomLeft: Radius.circular(keyRadius),
                                       bottomRight: Radius.circular(keyRadius),
@@ -303,8 +302,8 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withValues(alpha: 0.6),
-                                        blurRadius: isActive ? 0 : 2,
-                                        offset: isActive ? const Offset(0, 0) : const Offset(-2, -2),
+                                        blurRadius: isActive ? 1 : 4,
+                                        offset: isActive ? const Offset(0, -2) : const Offset(-4, -4),
                                       ),
                                       BoxShadow(
                                         color: Colors.black.withValues(alpha: 0.3),
@@ -313,99 +312,83 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                       ),
                                     ],
                                   ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTapDown: (_) => widget.onKeyPressed(note),
-                                      borderRadius: BorderRadius.only(
-                                        bottomLeft: Radius.circular(keyRadius),
-                                        bottomRight: Radius.circular(keyRadius),
-                                      ),
-                                      child: Stack(
-                                        children: [
-                                          // Glossy highlight at top
-                                          Positioned(
-                                            top: 1,
-                                            left: 2,
-                                            right: 2,
-                                            height: actualBlackKeyHeight * 0.2,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  begin: Alignment.topCenter,
-                                                  end: Alignment.bottomCenter,
-                                                  colors: [
-                                                    Colors.white.withValues(alpha: 0.15),
-                                                    Colors.white.withValues(alpha: 0.0),
-                                                  ],
-                                                ),
-                                                borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(keyRadius),
-                                                  topRight: Radius.circular(keyRadius),
-                                                ),
-                                              ),
+                                  child: Stack(
+                                    children: [
+                                      Positioned(
+                                        top: 1,
+                                        left: 2,
+                                        right: 2,
+                                        height: actualBlackKeyHeight * 0.2,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Colors.white.withValues(alpha: 0.15),
+                                                Colors.white.withValues(alpha: 0.0),
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(keyRadius),
+                                              topRight: Radius.circular(keyRadius),
                                             ),
                                           ),
-                                          // Scale note indicator for black keys
-                                          if (isInScale)
-                                            Positioned(
-                                              bottom: actualBlackKeyHeight * 0.15, // Moved up 2 pixels from the bottom
-                                              left: actualBlackKeyWidth * 0.13, // Add horizontal margin for narrower highlight
-                                              right: actualBlackKeyWidth * 0.15,
-                                              child: Container(
-                                                height: 3, // Restored to 1.5px height
-                                                decoration: BoxDecoration(
-                                                  color: const Color(0x660084EF),
-                                                  borderRadius: BorderRadius.circular(2)
-                                                  
-                                                ),
-                                              ),
-                                            ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
+                                      if (isInScale)
+                                        Positioned(
+                                          bottom: actualBlackKeyHeight * 0.15,
+                                          left: actualBlackKeyWidth * 0.13,
+                                          right: actualBlackKeyWidth * 0.15,
+                                          child: Container(
+                                            height: 3,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0x660084EF),
+                                              borderRadius: BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
+                              ),
                               ));
                             }
                           }
                           
                           return Stack(
                             children: [
-                              // White keys row
                               Row(
                                 children: whiteKeys.map((key) => Expanded(child: key)).toList(),
                               ),
-                              // Black keys overlay with correct positioning
                               ...blackKeys,
-                              // Enhanced drop shadow for deeper recess illusion - moved to top layer
                               Positioned(
                                 top: 0,
                                 left: 0,
                                 right: 0,
-                                height: 20, // Increased height for more dramatic effect
+                                height: 20,
                                 child: Container(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
                                       colors: [
-                                        Colors.black.withValues(alpha: 0.7), // Darker at top
-                                        Colors.black.withValues(alpha: 0.4), // Strong mid shadow
-                                        Colors.black.withValues(alpha: 0.2), // Medium fade
-                                        Colors.black.withValues(alpha: 0.05), // Subtle transition
-                                        Colors.black.withValues(alpha: 0.0), // Transparent
+                                        Colors.black.withValues(alpha: 0.7),
+                                        Colors.black.withValues(alpha: 0.4),
+                                        Colors.black.withValues(alpha: 0.2),
+                                        Colors.black.withValues(alpha: 0.05),
+                                        Colors.black.withValues(alpha: 0.0),
                                       ],
                                       stops: const [0.0, 0.3, 0.5, 0.8, 1.0],
                                     ),
                                   ),
                                 ),
                               ),
-                              // Left side shadow for depth
                               Positioned(
                                 top: 0,
                                 left: 0,
-                                width: 16, // Increased width for more dramatic effect
+                                width: 16,
                                 bottom: 0,
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -413,7 +396,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                       begin: Alignment.centerLeft,
                                       end: Alignment.centerRight,
                                       colors: [
-                                        Colors.black.withValues(alpha: 0.3), // Stronger shadow
+                                        Colors.black.withValues(alpha: 0.3),
                                         Colors.black.withValues(alpha: 0.1),
                                         Colors.black.withValues(alpha: 0.0),
                                       ],
@@ -422,11 +405,10 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                   ),
                                 ),
                               ),
-                              // Right side shadow for depth
                               Positioned(
                                 top: 0,
                                 right: 0,
-                                width: 16, // Increased width for more dramatic effect
+                                width: 16,
                                 bottom: 0,
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -434,7 +416,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                       begin: Alignment.centerRight,
                                       end: Alignment.centerLeft,
                                       colors: [
-                                        Colors.black.withValues(alpha: 0.3), // Stronger shadow
+                                        Colors.black.withValues(alpha: 0.3),
                                         Colors.black.withValues(alpha: 0.1),
                                         Colors.black.withValues(alpha: 0.0),
                                       ],
@@ -449,73 +431,70 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                       ),
                     ),
                   ),
-                // Right cheek block
-                Container(
-                  width: 48, // Increased width to match cheekBlockWidth
-                  height: double.infinity, // Take full available height
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10)),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
-                      colors: [
-                        Color(0xFF4A4A4A), // Light charcoal at top-right
-                        Color(0xFF3A3A3A), // Medium charcoal
-                        Color(0xFF2A2A2A), // Darker charcoal
-                        Color(0xFF1A1A1A), // Dark charcoal at bottom-left
-                      ],
-                      stops: [0.0, 0.3, 0.7, 1.0],
-                    ),
-                    boxShadow: [
-                      // Main dimensional shadow
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        blurRadius: 8,
-                        offset: const Offset(-3, 3),
+                  // Right cheek block
+                  Container(
+                    width: 48,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10)),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                        colors: [
+                          Color(0xFF4A4A4A),
+                          Color(0xFF3A3A3A),
+                          Color(0xFF2A2A2A),
+                          Color(0xFF1A1A1A),
+                        ],
+                        stops: [0.0, 0.3, 0.7, 1.0],
                       ),
-                      // Additional depth shadow
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(-1, 1),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(6),
-                      bottomRight: Radius.circular(6),
-                    ),
-                    child: Stack(
-                      children: [
-                        // Shadow overlay from case above
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: 20, // Shadow depth from case above
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.4), // Stronger shadow at top
-                                  Colors.black.withValues(alpha: 0.2),
-                                  Colors.black.withValues(alpha: 0.0), // Fade to transparent
-                                ],
-                                stops: const [0.0, 0.6, 1.0],
-                              ),
-                            ),
-                          ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          blurRadius: 8,
+                          offset: const Offset(-3, 3),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          offset: const Offset(-1, 1),
                         ),
                       ],
                     ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(6),
+                        bottomRight: Radius.circular(6),
+                      ),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 20,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.4),
+                                    Colors.black.withValues(alpha: 0.2),
+                                    Colors.black.withValues(alpha: 0.0),
+                                  ],
+                                  stops: const [0.0, 0.6, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
           ),
         );
       },
