@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 class PianoKeyboard extends StatefulWidget {
   final void Function(String note) onKeyPressed;
@@ -50,16 +51,16 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
         return Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.centerRight,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF4A4A4A), // Darker starting metallic gray at top-left
-                Color(0xFF3A3A3A), // Medium metallic gray
+                Color.fromARGB(255, 47, 47, 47), // Darker starting metallic gray at top-left
+                Color.fromARGB(255, 58, 58, 58), // Medium metallic gray
                 Color(0xFF2A2A2A), // Darker metallic gray
                 Color(0xFF1A1A1A), // Deep charcoal
                 Color(0xFF0A0A0A), // Very dark charcoal at center-right
               ],
-              stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+              transform: GradientRotation(5 * math.pi / 180),
             ),
             borderRadius: BorderRadius.circular(containerRadius),
             boxShadow: [
@@ -78,7 +79,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.only(top: 48.0, bottom: 16.0), // Add 48px top padding, keep bottom padding
+            padding: const EdgeInsets.only(top: 48.0, bottom: 10.0), // Add 48px top padding, keep bottom padding
             child: AspectRatio(
               aspectRatio: whiteKeyCount / 4.6, // Restore proportional height based on key count
               child: Row(
@@ -88,6 +89,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                   width: 48, // Increased width to match cheekBlockWidth
                   height: double.infinity, // Take full available height
                   decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(bottomRight: Radius.circular(10)),
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -238,13 +240,13 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                           // Thin bottom border for scale notes (white keys)
                                           if (isInScale)
                                           Positioned(
-                                            bottom: 0,
+                                            bottom: -1,
                                             left: 0,
                                             right: 0,
                                             child: Container(
-                                              height: 2,
+                                              height: 4,
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFF0084EF),
+                                                color: const Color(0x660084EF),
                                                 borderRadius: BorderRadius.only(
                                                   bottomLeft: Radius.circular(keyRadius),
                                                   bottomRight: Radius.circular(keyRadius),
@@ -280,11 +282,11 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                           ],
                                           stops: const [0.0, 0.6, 1.0],
                                         )
-                                      : LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
+                                      : RadialGradient(
+                                          center: Alignment(0,-0.15),
+                                          radius: 3.0,
                                           colors: [
-                                            const Color(0xFF4A4A4A),
+                                            const Color.fromARGB(255, 45, 45, 45),
                                             const Color(0xFF2A2A2A),
                                             const Color(0xFF1A1A1A),
                                             const Color.fromARGB(255, 51, 51, 53),
@@ -302,7 +304,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                       BoxShadow(
                                         color: Colors.black.withValues(alpha: 0.6),
                                         blurRadius: isActive ? 0 : 2,
-                                        offset: isActive ? const Offset(0, 0) : const Offset(-2, 0),
+                                        offset: isActive ? const Offset(0, 0) : const Offset(-2, -2),
                                       ),
                                       BoxShadow(
                                         color: Colors.black.withValues(alpha: 0.3),
@@ -347,14 +349,15 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                           // Scale note indicator for black keys
                                           if (isInScale)
                                             Positioned(
-                                              bottom: 2, // Moved up 2 pixels from the bottom
-                                              left: actualBlackKeyWidth * 0.15, // Add horizontal margin for narrower highlight
+                                              bottom: actualBlackKeyHeight * 0.15, // Moved up 2 pixels from the bottom
+                                              left: actualBlackKeyWidth * 0.13, // Add horizontal margin for narrower highlight
                                               right: actualBlackKeyWidth * 0.15,
                                               child: Container(
-                                                height: 1.5, // Restored to 1.5px height
+                                                height: 3, // Restored to 1.5px height
                                                 decoration: BoxDecoration(
-                                                  color: const Color(0xFF0084EF),
-                                                  borderRadius: BorderRadius.circular(keyRadius * 0.3),
+                                                  color: const Color(0x660084EF),
+                                                  borderRadius: BorderRadius.circular(2)
+                                                  
                                                 ),
                                               ),
                                             ),
@@ -451,6 +454,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                   width: 48, // Increased width to match cheekBlockWidth
                   height: double.infinity, // Take full available height
                   decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10)),
                     gradient: const LinearGradient(
                       begin: Alignment.topRight,
                       end: Alignment.bottomLeft,
@@ -461,10 +465,6 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                         Color(0xFF1A1A1A), // Dark charcoal at bottom-left
                       ],
                       stops: [0.0, 0.3, 0.7, 1.0],
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(6),
-                      bottomRight: Radius.circular(6),
                     ),
                     boxShadow: [
                       // Main dimensional shadow
