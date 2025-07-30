@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:window_size/window_size.dart';
 import 'widgets/piano_keyboard.dart';
 import 'models/piano_sound.dart';
+import 'models/scales.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,14 @@ class _PianoPageState extends State<PianoPage> {
   final PianoSound _sound = PianoSound();
   final FocusNode _focusNode = FocusNode();
   
+  // Key and Mode settings
+  String _selectedKey = 'None';
+  String _selectedMode = 'Ionian (Major)';
+  
+  // Available keys and modes from Scales class
+  final List<String> _keys = Scales.getAvailableKeys();
+  final List<String> _modes = Scales.getAvailableModes();
+  
   // Interval settings
   bool _minorThird = false;
   bool _majorThird = false;
@@ -55,6 +64,9 @@ class _PianoPageState extends State<PianoPage> {
 
   // Active notes for animation
   Set<String> _activeNotes = {};
+
+  // Get current scale notes
+  List<String> get _currentScaleNotes => Scales.getScaleNotes(_selectedKey, _selectedMode);
 
   // Calculate interval note based on semitones
   String? _getIntervalNote(String baseNote, int semitones) {
@@ -242,6 +254,7 @@ class _PianoPageState extends State<PianoPage> {
                   child: PianoKeyboard(
                     onKeyPressed: _playNoteWithIntervals,
                     activeNotes: _activeNotes,
+                    scaleNotes: _currentScaleNotes.toSet(),
                   ),
                 ),
               ),
@@ -267,6 +280,113 @@ class _PianoPageState extends State<PianoPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Key and Mode selection
+                    Text(
+                      'SELECT KEY AND MODE',
+                      style: TextStyle(
+                        color: const Color(0xFFF9931A),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        // Key dropdown
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Key',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedKey,
+                                    isExpanded: true,
+                                    items: _keys.map((String key) {
+                                      return DropdownMenuItem<String>(
+                                        value: key,
+                                        child: Text(key),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? newValue) {
+                                      if (newValue != null) {
+                                        setState(() {
+                                          _selectedKey = newValue;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Mode dropdown
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Mode',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedMode,
+                                    isExpanded: true,
+                                    items: _modes.map((String mode) {
+                                      return DropdownMenuItem<String>(
+                                        value: mode,
+                                        child: Text(
+                                          mode,
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? newValue) {
+                                      if (newValue != null) {
+                                        setState(() {
+                                          _selectedMode = newValue;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
 
                     Text(
                       'SELECT INTERVALS TO PLAY WITH EACH NOTE',

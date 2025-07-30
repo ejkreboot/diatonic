@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class PianoKeyboard extends StatefulWidget {
   final void Function(String note) onKeyPressed;
   final Set<String> activeNotes;
+  final Set<String> scaleNotes;
 
   const PianoKeyboard({
     super.key, 
     required this.onKeyPressed,
     this.activeNotes = const {},
+    this.scaleNotes = const {},
   });
 
   // 88-key piano from A0 to C8 - made public for interval calculations
@@ -56,6 +58,8 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
           final note = PianoKeyboard.allKeys[i];
           final isBlackKey = note.contains('#');
           final isActive = widget.activeNotes.contains(note);
+          final noteWithoutOctave = note.replaceAll(RegExp(r'\d+'), '');
+          final isInScale = widget.scaleNotes.contains(noteWithoutOctave);
           
           if (!isBlackKey) {
             // White key with modern styling and animation
@@ -85,7 +89,28 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                     bottomLeft: Radius.circular(keyRadius),
                     bottomRight: Radius.circular(keyRadius),
                   ),
-                  child: Container(),
+                  child: Stack(
+                    children: [
+                      Container(),
+                      // Thin bottom border for scale notes (white keys)
+                      if (isInScale)
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 2,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0084EF),
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(keyRadius),
+                                bottomRight: Radius.circular(keyRadius),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ));
@@ -102,9 +127,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 100),
                 decoration: BoxDecoration(
-                  color: isActive 
-                      ? Colors.grey.shade700 
-                      : Colors.grey.shade900,
+                  color: isActive ? Colors.grey.shade700 : Colors.grey.shade900,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(keyRadius),
                     bottomRight: Radius.circular(keyRadius),
@@ -125,7 +148,28 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                       bottomLeft: Radius.circular(keyRadius),
                       bottomRight: Radius.circular(keyRadius),
                     ),
-                    child: Container(),
+                    child: Stack(
+                      children: [
+                        Container(),
+                        // Thin bottom border for scale notes (black keys)
+                        if (isInScale)
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              height: 1.5,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0084EF),
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(keyRadius),
+                                  bottomRight: Radius.circular(keyRadius),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
