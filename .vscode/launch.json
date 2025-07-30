@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "chorder (Flutter macOS)",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "chorder (Flutter iOS)",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "chorder (Flutter Android)",
+      "request": "launch",
+      "type": "dart"
+    }
+  ]
+}
