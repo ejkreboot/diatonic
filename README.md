@@ -28,16 +28,30 @@ Built using [Flutter](https://flutter.dev). Flutter is cross platform, and thus 
 
 As binaries become available you will be able to downloae pre-build binaries.
 
-### 🧪 Build from source
+### 🧪 Build from source (MacOS)
 
 1. Install Flutter with macOS desktop support  
    [Flutter installation guide](https://docs.flutter.dev/get-started/install)
 
-2. Clone the repo and build.
+2. Clone the repo, build, and install.
 
 ```bash
 git clone https://github.com/ejkreboot/chorder.git
 cd chorder
-flutter build macos
-cp -R ./build/macos/Build/Products/Release/chorder.app ~/Applications/
+chmod 755 scripts/macos_build.sh
+./scripts/macos_build.sh
 ```
+
+### 🧪 Build from source (Other desktop environments)
+
+Untested, but the following should work, or nearly work
+
+```
+flutter clean
+flutter pub get
+flutter build [platform] --release
+```
+
+(Where `platform` is either `windows` or `linux`.)
+
+The resulting binary should then be in `./build/[platform]/Build/Products/Release`
