@@ -176,7 +176,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                   duration: const Duration(milliseconds: 100),
                                   height: actualKeyHeight,
                                 decoration: BoxDecoration(
-                                  border: isActive ? Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 1), width: 0.5)) : null,
+                                  border: isActive ? Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 1), width: 1)) : null,
                                   gradient: LinearGradient(
                                         begin: Alignment.topCenter,
                                         end: Alignment.bottomCenter,
@@ -223,14 +223,14 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                                 end: Alignment.centerRight,
                                                 colors: [
                                                   Colors.black.withValues(alpha: 0.6),
-                                                  Colors.black.withValues(alpha: 0.1),
-                                                  Colors.black.withValues(alpha: 0.01),
-                                                  Colors.black.withValues(alpha: 0.0),
-                                                  Colors.black.withValues(alpha: 0.01),
+                                                  const Color.fromARGB(255, 187, 141, 66).withAlpha(20),
+                                                  Colors.black.withValues(alpha: 0.05),
+                                                  Colors.black.withValues(alpha: 0.04),
+                                                  Colors.black.withValues(alpha: 0.05),
                                                   Colors.black.withValues(alpha: 0.1),
                                                   Colors.black.withValues(alpha: 0.6),
                                                 ],
-                                                stops: const [0.0, 0.25, 0.35, 0.5, 0.65, 0.75, 1.0],
+                                                stops: const [0.0, 0.06, 0.1, 0.5, 0.55, 0.65, 1.0],
                                               ),
                                             ),
                                           ),
@@ -302,8 +302,8 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withValues(alpha: 0.6),
-                                        blurRadius: isActive ? 1 : 4,
-                                        offset: isActive ? const Offset(0, -2) : const Offset(-4, -4),
+                                        blurRadius: isActive ? 1 : 6,
+                                        offset: isActive ? const Offset (-2, 0) : const Offset(-6, 2),
                                       ),
                                       BoxShadow(
                                         color: Colors.black.withValues(alpha: 0.3),
