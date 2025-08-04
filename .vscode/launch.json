@@ -4,17 +4,20 @@
     {
       "name": "chorder (Flutter macOS)",
       "request": "launch",
-      "type": "dart"
+      "type": "dart",
+      "deviceId": "macos"
     },
     {
       "name": "chorder (Flutter iOS)",
       "request": "launch",
-      "type": "dart"
+      "type": "dart",
+      "deviceId": "ios"
     },
     {
       "name": "chorder (Flutter Android)",
       "request": "launch",
-      "type": "dart"
+      "type": "dart",
+      "deviceId": "android"
     }
   ]
 }

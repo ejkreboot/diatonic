@@ -47,8 +47,9 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
         final whiteKeyWidth = keyAreaWidth / whiteKeyCount;
         
         // Scalable border radius based on key width
-        final keyRadius = (whiteKeyWidth * 0.15).clamp(1.0, 5.0);
-        final containerRadius = (whiteKeyWidth * 0.1).clamp(3.0, 8.0);
+        final scalingFactor = whiteKeyWidth / 30.0;
+        final keyRadius = 6 * scalingFactor;
+        final containerRadius = 8 * scalingFactor;
 
         return Container(
           decoration: BoxDecoration(
@@ -56,8 +57,8 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color.fromARGB(255, 47, 47, 47),
-                Color.fromARGB(255, 58, 58, 58),
+                Color.fromARGB(255, 33, 33, 33),
+                Color.fromARGB(255, 35, 35, 35),
                 Color(0xFF2A2A2A),
                 Color(0xFF1A1A1A),
                 Color(0xFF0A0A0A),
@@ -81,7 +82,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
           child: Padding(
             padding: const EdgeInsets.only(top: 48.0, bottom: 10.0),
             child: AspectRatio(
-              aspectRatio: whiteKeyCount / 4.6,
+              aspectRatio: whiteKeyCount / 5.4, // adjusted for cheek blocks
               child: Row(
                 children: [
                   // Left cheek block
@@ -152,7 +153,7 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                           final actualKeyAreaWidth = keyboardConstraints.maxWidth;
                           final actualKeyHeight = keyboardConstraints.maxHeight;
                           final actualWhiteKeyWidth = actualKeyAreaWidth / whiteKeyCount;
-                          final actualBlackKeyWidth = actualWhiteKeyWidth * 0.55;
+                          final actualBlackKeyWidth = actualWhiteKeyWidth * 0.5;
                           final actualBlackKeyHeight = actualKeyHeight * 0.65;
                           
                           final whiteKeys = <Widget>[];
@@ -181,35 +182,30 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                         begin: Alignment.topCenter,
                                         end: Alignment.bottomCenter,
                                         colors: [
-                                          const Color(0xFFFAFAFA),
-                                          const Color(0xFFF0F0F0),
-                                          const Color(0xFFE8E8E8),
+                                          const Color(0xFFefe9ea),
+                                          const Color(0xFFf0efe9),
+                                          const Color(0xFFefedea),
                                         ],
-                                        stops: const [0.0, 0.8, 1.0],
+                                        stops: const [0.0, 0.3, 1.0],
                                   ),
                                   borderRadius: BorderRadius.only(
                                     bottomLeft: Radius.circular(keyRadius),
-                                    bottomRight: Radius.circular(keyRadius),
+                                    bottomRight: Radius.circular(keyRadius + ( 1 * scalingFactor)),
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey.withValues(alpha: 0.4),
-                                      blurRadius: 2,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
+
                                 ),
                                 child: Container(
                                   decoration: BoxDecoration(
                                     border: Border(
-                                      left: BorderSide(color: Colors.grey.shade500, width: 0.5),
-                                      right: BorderSide(color: Colors.grey.shade800, width: 0.5),
-                                      bottom: BorderSide(color: Colors.grey.shade900, width: 1.0),
+                                      top: BorderSide(color: const Color.fromARGB(255, 220, 55, 40), width: 3),
+                                      left: BorderSide(color: const Color.fromARGB(255, 122, 101, 82), width: 0.5 * scalingFactor),
+                                      right: BorderSide(color: Colors.grey.shade800, width: 1 * scalingFactor),
+                                      bottom: BorderSide(color: Colors.grey.shade900, width: 1.0 * scalingFactor),
                                     ),
                                   ),
                                   child: Stack(
                                     children: [
-                                      // Nneighbor shadows (cast onto this key when it's pressed)
+                                      // Neighbor shadows (cast onto this key when it's pressed)
                                       if (isActive)
                                         Positioned(
                                           top: 0,
@@ -274,41 +270,39 @@ class _PianoKeyboardState extends State<PianoKeyboard> with TickerProviderStateM
                                   decoration: BoxDecoration(
                                     gradient: RadialGradient(
                                       center: Alignment(0, -0.15),
-                                      radius: 3.0,
+                                      radius: 4.0,
                                       colors: [
                                         const Color.fromARGB(255, 45, 45, 45),
                                         const Color(0xFF2A2A2A),
-                                        const Color(0xFF1A1A1A),
                                         const Color.fromARGB(255, 51, 51, 53),
-                                        const Color.fromARGB(255, 79, 79, 79),
+                                        const Color.fromARGB(255, 94, 94, 94),
                                         const Color(0xFF1A1A1B),
                                         const Color.fromARGB(255, 56, 56, 56),
                                         const Color(0xFF000000),
 
                                       ],
                                       stops: [0.0, 
-                                              0.3, 
                                               0.5, 
                                               isActive ? 0.80 : 0.84, 
                                               isActive ? 0.85 : 0.87, 
                                               isActive ? 0.90 : 0.92, 
-                                              isActive ? 0.90 : 0.921,
+                                              isActive ? 0.90 : 0.922,
                                               isActive ? 0.95 :  1.0]
                                     ),
                                     borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(keyRadius),
-                                      bottomRight: Radius.circular(keyRadius),
+                                      bottomLeft: Radius.circular(keyRadius * 0.5),
+                                      bottomRight: Radius.circular(keyRadius * 0.5),
                                     ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withValues(alpha: 0.6),
-                                        blurRadius: isActive ? 1 : 6,
-                                        offset: isActive ? const Offset (-2, 0) : const Offset(-6, 2),
+                                        blurRadius: isActive ? 1 : 6 * scalingFactor,
+                                        offset: isActive ? const Offset (-2, 0) : Offset(-6 * scalingFactor, 2),
                                       ),
                                       BoxShadow(
                                         color: Colors.black.withValues(alpha: 0.3),
-                                        blurRadius: 3,
-                                        offset: const Offset(0, 2),
+                                        blurRadius: 3 * scalingFactor,
+                                        offset: Offset(0, 2 * scalingFactor),
                                       ),
                                     ],
                                   ),

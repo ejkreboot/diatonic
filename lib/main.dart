@@ -5,28 +5,28 @@ import 'package:window_size/window_size.dart';
 import 'widgets/piano_keyboard.dart';
 import 'models/piano_sound.dart';
 import 'models/scales.dart';
+import 'pages/audio_player_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowTitle('Chorder');
-    setWindowMinSize(const Size(800, 360));
-    setWindowMaxSize(const Size(10000, 380));
-    setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 360));
+    setWindowMinSize(const Size(800, 420));
+    setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
   }
+
   runApp(const ChorderApp());
 }
 
 class ChorderApp extends StatelessWidget {
   const ChorderApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: ConstrainedBox(
         constraints: const BoxConstraints(
-          maxHeight: 430,
+          maxHeight: 800,
           maxWidth: double.infinity,
         ),
         child: const PianoPage(),
@@ -66,11 +66,26 @@ class _PianoPageState extends State<PianoPage> {
   Set<String> _activeNotes = {};
   
   // Track currently pressed keys to avoid clearing while held
-  Set<String> _pressedKeys = {};
-  Set<LogicalKeyboardKey> _pressedKeyboardKeys = {};
+  final Set<String> _pressedKeys = {};
+  final Set<LogicalKeyboardKey> _pressedKeyboardKeys = {};
   
   // Map keyboard keys to their triggered notes for proper release tracking
-  Map<LogicalKeyboardKey, String> _keyboardToNoteMap = {};
+  final Map<LogicalKeyboardKey, String> _keyboardToNoteMap = {};
+  
+  // Audio player visibility
+  bool _showAudioPlayer = false;
+
+  // Piano dynamic level control (0-4)
+  int _pianoDynamicLevel = 2; // Start at MezzoPiano (middle level)
+  
+  // Dynamic level names for display
+  static const List<String> _dynamicNames = [
+    'Pianissimo',
+    'Piano', 
+    'MezzoPiano',
+    'MezzoForte',
+    'Forte'
+  ];
 
   // Get current scale notes
   List<String> get _currentScaleNotes => Scales.getScaleNotes(_selectedKey, _selectedMode);
@@ -374,11 +389,65 @@ class _PianoPageState extends State<PianoPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Single row layout with Key & Mode on left, Intervals on right
+                    // Single row layout with Piano Volume on left, Key & Mode in middle, Intervals on right
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Left side: Key and Mode selection
+                        // Left side: Piano Dynamic Level (horizontal slider)
+                        SizedBox(
+                          height: 80,
+                          width: 80,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.volume_up,
+                                size: 14,
+                                color: const Color(0xFFF9931A),
+                              ),
+                              const SizedBox(height: 10), // Match spacing with other sections
+                              SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 4,
+                                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                                  showValueIndicator: ShowValueIndicator.never,
+                                  activeTrackColor: const Color(0xFFF9931A),
+                                  inactiveTrackColor: const Color(0xFF5A5A5A),
+                                  thumbColor: const Color(0xFFF9931A),
+                                  overlayColor: const Color(0xFFF9931A).withValues(alpha: 0.2),
+                                ),
+                                child: SizedBox(
+                                  width: 70,
+                                  child: Slider(
+                                    min: 0,
+                                    max: 4,
+                                    divisions: 4,
+                                    value: _pianoDynamicLevel.toDouble(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _pianoDynamicLevel = value.round();
+                                      });
+                                      _sound.setDynamicLevel(_pianoDynamicLevel);
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _dynamicNames[_pianoDynamicLevel],
+                                style: const TextStyle(
+                                  color: Color(0xFFE5E5E5),
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Middle: Key and Mode selection
                         Expanded(
                           flex: 2,
                           child: Column(
@@ -549,6 +618,70 @@ class _PianoPageState extends State<PianoPage> {
                 ),
               ),
               const SizedBox(height: 24),
+              // Audio Player Toggle Button
+              Container(
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * .95,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _showAudioPlayer = !_showAudioPlayer;
+                    });
+                  },
+                  icon: Icon(
+                    _showAudioPlayer ? Icons.keyboard_arrow_up : Icons.audio_file,
+                    color: const Color(0xFFE5E5E5),
+                    size: 18,
+                  ),
+                  label: Text(
+                    _showAudioPlayer ? 'Hide Audio Player' : 'Show Audio Player',
+                    style: const TextStyle(
+                      color: Color(0xFFE5E5E5),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF393939),
+                    foregroundColor: const Color(0xFFE5E5E5),
+                    elevation: 0,
+                    side: const BorderSide(
+                      color: Color(0xFF4A4A4A),
+                      width: 0.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ),
+              // Audio Player Section
+              if (_showAudioPlayer) ...[
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * .95,
+                    maxHeight: 600, // Increased height to accommodate saved regions
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF393939),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: const Color(0xFF4A4A4A),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: const AudioPlayerPage(),
+                  ),
+                ),
+              ],
                 ],
               ),
             ),
