@@ -46,9 +46,12 @@ class PianoSound {
 
   Future<void> playChord({
     required String rootNote,
+    String? sus2Note,
     String? minorThirdNote,
     String? majorThirdNote,
+    String? sus4Note,
     String? perfectFifthNote,
+    String? augmentedFifthNote,
     String? minorSeventhNote,
     String? majorSeventhNote,
     String? ninthNote,
@@ -62,6 +65,10 @@ class PianoSound {
       futures.add(rootPlayer.play(AssetSource('audio/$rootNote-$currentDynamicName.wav')));
 
       // Play intervals if provided
+      if (sus2Note != null) {
+        final player = AudioPlayer();
+        futures.add(player.play(AssetSource('audio/$sus2Note-$currentDynamicName.wav')));
+      }
       if (minorThirdNote != null) {
         final player = AudioPlayer();
         futures.add(player.play(AssetSource('audio/$minorThirdNote-$currentDynamicName.wav')));
@@ -70,9 +77,17 @@ class PianoSound {
         final player = AudioPlayer();
         futures.add(player.play(AssetSource('audio/$majorThirdNote-$currentDynamicName.wav')));
       }
+      if (sus4Note != null) {
+        final player = AudioPlayer();
+        futures.add(player.play(AssetSource('audio/$sus4Note-$currentDynamicName.wav')));
+      }
       if (perfectFifthNote != null) {
         final player = AudioPlayer();
         futures.add(player.play(AssetSource('audio/$perfectFifthNote-$currentDynamicName.wav')));
+      }
+      if (augmentedFifthNote != null) {
+        final player = AudioPlayer();
+        futures.add(player.play(AssetSource('audio/$augmentedFifthNote-$currentDynamicName.wav')));
       }
       if (minorSeventhNote != null) {
         final player = AudioPlayer();

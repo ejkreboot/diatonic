@@ -220,9 +220,9 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF393939), // Match piano app container color
-      body: Padding(
+    return Container(
+      color: const Color(0xFF393939), // Match piano app container color
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -544,6 +544,10 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
                 const SizedBox(height: 8),
                 Expanded(
                   child: Container(
+                    constraints: const BoxConstraints(
+                      minHeight: 80, // Reduced minimum height to save space
+                      maxHeight: double.infinity,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(color: const Color(0xFF5A5A5A), width: 0.5),
                       borderRadius: BorderRadius.circular(6),

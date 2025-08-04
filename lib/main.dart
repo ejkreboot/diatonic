@@ -54,13 +54,24 @@ class _PianoPageState extends State<PianoPage> {
   final List<String> _keys = Scales.getAvailableKeys();
   final List<String> _modes = Scales.getAvailableModes();
   
-  // Interval settings
-  bool _minorThird = false;
-  bool _majorThird = false;
-  bool _perfectFifth = false;
-  bool _minorSeventh = false;
-  bool _majorSeventh = false;
-  bool _ninth = false;
+  // Interval settings - now using semitone-based approach
+  final List<bool> _intervals = List.filled(12, false); // Index 0-11 for semitones 0-11
+  
+  // Interval names for tooltips (semitones 1-11, skipping 0 as it's the root)
+  static const List<String> _intervalNames = [
+    '', // 0 semitones (root) - not used
+    'Minor 2nd',        // 1
+    'Major 2nd (sus2)', // 2
+    'Minor 3rd',        // 3
+    'Major 3rd',        // 4
+    'Perfect 4th (sus4)', // 5
+    'Tritone',          // 6
+    'Perfect 5th',      // 7
+    'Augmented 5th',    // 8
+    'Major 6th',        // 9
+    'Minor 7th',        // 10
+    'Major 7th',        // 11
+  ];
 
   // Active notes for animation
   Set<String> _activeNotes = {};
@@ -106,47 +117,14 @@ class _PianoPageState extends State<PianoPage> {
     // Calculate interval notes
     final notesToPlay = <String>[note]; // Start with the base note
     
-    // Add intervals if enabled
-    if (_minorThird) {
-      final intervalNote = _getIntervalNote(note, 3);
-      if (intervalNote != null) {
-        notesToPlay.add(intervalNote);
-        _pressedKeys.add(intervalNote);
-      }
-    }
-    if (_majorThird) {
-      final intervalNote = _getIntervalNote(note, 4);
-      if (intervalNote != null) {
-        notesToPlay.add(intervalNote);
-        _pressedKeys.add(intervalNote);
-      }
-    }
-    if (_perfectFifth) {
-      final intervalNote = _getIntervalNote(note, 7);
-      if (intervalNote != null) {
-        notesToPlay.add(intervalNote);
-        _pressedKeys.add(intervalNote);
-      }
-    }
-    if (_minorSeventh) {
-      final intervalNote = _getIntervalNote(note, 10);
-      if (intervalNote != null) {
-        notesToPlay.add(intervalNote);
-        _pressedKeys.add(intervalNote);
-      }
-    }
-    if (_majorSeventh) {
-      final intervalNote = _getIntervalNote(note, 11);
-      if (intervalNote != null) {
-        notesToPlay.add(intervalNote);
-        _pressedKeys.add(intervalNote);
-      }
-    }
-    if (_ninth) {
-      final intervalNote = _getIntervalNote(note, 14);
-      if (intervalNote != null) {
-        notesToPlay.add(intervalNote);
-        _pressedKeys.add(intervalNote);
+    // Add intervals if enabled (checking semitones 1-11, skipping 0 as it's the root)
+    for (int semitones = 1; semitones < 12; semitones++) {
+      if (_intervals[semitones]) {
+        final intervalNote = _getIntervalNote(note, semitones);
+        if (intervalNote != null) {
+          notesToPlay.add(intervalNote);
+          _pressedKeys.add(intervalNote);
+        }
       }
     }
     
@@ -158,12 +136,15 @@ class _PianoPageState extends State<PianoPage> {
     // Play chord with calculated intervals
     _sound.playChord(
       rootNote: note,
-      minorThirdNote: notesToPlay.length > 1 && _minorThird ? _getIntervalNote(note, 3) : null,
-      majorThirdNote: notesToPlay.length > 1 && _majorThird ? _getIntervalNote(note, 4) : null,
-      perfectFifthNote: notesToPlay.length > 1 && _perfectFifth ? _getIntervalNote(note, 7) : null,
-      minorSeventhNote: notesToPlay.length > 1 && _minorSeventh ? _getIntervalNote(note, 10) : null,
-      majorSeventhNote: notesToPlay.length > 1 && _majorSeventh ? _getIntervalNote(note, 11) : null,
-      ninthNote: notesToPlay.length > 1 && _ninth ? _getIntervalNote(note, 14) : null,
+      sus2Note: notesToPlay.length > 1 && _intervals[2] ? _getIntervalNote(note, 2) : null,
+      minorThirdNote: notesToPlay.length > 1 && _intervals[3] ? _getIntervalNote(note, 3) : null,
+      majorThirdNote: notesToPlay.length > 1 && _intervals[4] ? _getIntervalNote(note, 4) : null,
+      sus4Note: notesToPlay.length > 1 && _intervals[5] ? _getIntervalNote(note, 5) : null,
+      perfectFifthNote: notesToPlay.length > 1 && _intervals[7] ? _getIntervalNote(note, 7) : null,
+      augmentedFifthNote: notesToPlay.length > 1 && _intervals[8] ? _getIntervalNote(note, 8) : null,
+      minorSeventhNote: notesToPlay.length > 1 && _intervals[10] ? _getIntervalNote(note, 10) : null,
+      majorSeventhNote: notesToPlay.length > 1 && _intervals[11] ? _getIntervalNote(note, 11) : null,
+      ninthNote: notesToPlay.length > 1 && _intervals.length > 14 ? _getIntervalNote(note, 14) : null, // 9th if we extend beyond octave
     );
     
     // Schedule clearing, but only if no keys are still pressed
@@ -185,29 +166,11 @@ class _PianoPageState extends State<PianoPage> {
     _pressedKeys.remove(note);
     
     // Also remove any interval notes that might have been triggered with this root note
-    if (_minorThird) {
-      final intervalNote = _getIntervalNote(note, 3);
-      if (intervalNote != null) _pressedKeys.remove(intervalNote);
-    }
-    if (_majorThird) {
-      final intervalNote = _getIntervalNote(note, 4);
-      if (intervalNote != null) _pressedKeys.remove(intervalNote);
-    }
-    if (_perfectFifth) {
-      final intervalNote = _getIntervalNote(note, 7);
-      if (intervalNote != null) _pressedKeys.remove(intervalNote);
-    }
-    if (_minorSeventh) {
-      final intervalNote = _getIntervalNote(note, 10);
-      if (intervalNote != null) _pressedKeys.remove(intervalNote);
-    }
-    if (_majorSeventh) {
-      final intervalNote = _getIntervalNote(note, 11);
-      if (intervalNote != null) _pressedKeys.remove(intervalNote);
-    }
-    if (_ninth) {
-      final intervalNote = _getIntervalNote(note, 14);
-      if (intervalNote != null) _pressedKeys.remove(intervalNote);
+    for (int semitones = 1; semitones < 12; semitones++) {
+      if (_intervals[semitones]) {
+        final intervalNote = _getIntervalNote(note, semitones);
+        if (intervalNote != null) _pressedKeys.remove(intervalNote);
+      }
     }
     
     // Schedule clearing if no keys are pressed
@@ -573,40 +536,21 @@ class _PianoPageState extends State<PianoPage> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 6,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  _buildModernIntervalCheckbox(
-                                    'Minor 3rd',
-                                    _minorThird,
-                                    (value) => setState(() => _minorThird = value ?? false),
-                                  ),
-                                  _buildModernIntervalCheckbox(
-                                    'Major 3rd',
-                                    _majorThird,
-                                    (value) => setState(() => _majorThird = value ?? false),
-                                  ),
-                                  _buildModernIntervalCheckbox(
-                                    'Perfect 5th',
-                                    _perfectFifth,
-                                    (value) => setState(() => _perfectFifth = value ?? false),
-                                  ),
-                                  _buildModernIntervalCheckbox(
-                                    'Minor 7th',
-                                    _minorSeventh,
-                                    (value) => setState(() => _minorSeventh = value ?? false),
-                                  ),
-                                  _buildModernIntervalCheckbox(
-                                    'Major 7th',
-                                    _majorSeventh,
-                                    (value) => setState(() => _majorSeventh = value ?? false),
-                                  ),
-                                  _buildModernIntervalCheckbox(
-                                    'Ninth',
-                                    _ninth,
-                                    (value) => setState(() => _ninth = value ?? false),
-                                  ),
+                                  for (int semitones = 1; semitones <= 11; semitones++)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 6),
+                                      child: Tooltip(
+                                        message: _intervalNames[semitones],
+                                        child: _buildCompactIntervalCheckbox(
+                                          semitones.toString(),
+                                          _intervals[semitones],
+                                          (value) => setState(() => _intervals[semitones] = value ?? false),
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ],
@@ -618,44 +562,64 @@ class _PianoPageState extends State<PianoPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Audio Player Toggle Button
+              // Audio Player Toggle - Clean caret + text + line design
               Container(
                 width: double.infinity,
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * .95,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ElevatedButton.icon(
-                  onPressed: () {
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: InkWell(
+                  onTap: () {
                     setState(() {
                       _showAudioPlayer = !_showAudioPlayer;
                     });
+                    
+                    // Resize window based on audio player visibility
+                    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+                      if (_showAudioPlayer) {
+                        // Expand window height to accommodate audio player
+                        setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 1000));
+                      } else {
+                        // Collapse window back to original size
+                        setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
+                      }
+                    }
                   },
-                  icon: Icon(
-                    _showAudioPlayer ? Icons.keyboard_arrow_up : Icons.audio_file,
-                    color: const Color(0xFFE5E5E5),
-                    size: 18,
-                  ),
-                  label: Text(
-                    _showAudioPlayer ? 'Hide Audio Player' : 'Show Audio Player',
-                    style: const TextStyle(
-                      color: Color(0xFFE5E5E5),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _showAudioPlayer ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
+                          color: const Color(0xFFE5E5E5),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _showAudioPlayer ? 'Hide Audio Player' : 'Show Audio Player',
+                          style: const TextStyle(
+                            color: Color(0xFFE5E5E5),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color(0xFF4A4A4A),
+                                  Color(0xFF2A2A2A),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF393939),
-                    foregroundColor: const Color(0xFFE5E5E5),
-                    elevation: 0,
-                    side: const BorderSide(
-                      color: Color(0xFF4A4A4A),
-                      width: 0.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
               ),
@@ -664,9 +628,9 @@ class _PianoPageState extends State<PianoPage> {
                 const SizedBox(height: 16),
                 Container(
                   width: double.infinity,
+                  height: 500, // Add finite height constraint
                   constraints: BoxConstraints(
                     maxWidth: MediaQuery.of(context).size.width * .95,
-                    maxHeight: 600, // Increased height to accommodate saved regions
                   ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF393939),
@@ -693,12 +657,14 @@ class _PianoPageState extends State<PianoPage> {
     );
   }
 
-  Widget _buildModernIntervalCheckbox(
+  Widget _buildCompactIntervalCheckbox(
     String label,
     bool value,
     ValueChanged<bool?> onChanged,
   ) {
     return Container(
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
         color: value ? const Color(0xFF0084EF).withValues(alpha: 0.15) : const Color(0xFF2F2F2F),
         borderRadius: BorderRadius.circular(4),
@@ -712,40 +678,14 @@ class _PianoPageState extends State<PianoPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(4),
           onTap: () => onChanged(!value),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: value ? const Color(0xFF0084EF) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(2),
-                    border: Border.all(
-                      color: value ? const Color(0xFF0084EF) : const Color(0xFF7A7A7A),
-                      width: 1,
-                    ),
-                  ),
-                  child: value
-                      ? const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 10,
-                        )
-                      : null,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: value ? const Color(0xFFE5E5E5) : const Color(0xFFB8B8B8),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: value ? const Color(0xFFE5E5E5) : const Color(0xFFB8B8B8),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),
