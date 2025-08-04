@@ -26,7 +26,7 @@ class ChorderApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: ConstrainedBox(
         constraints: const BoxConstraints(
-          maxHeight: 800,
+          maxHeight: 920,
           maxWidth: double.infinity,
         ),
         child: const PianoPage(),
@@ -83,6 +83,9 @@ class _PianoPageState extends State<PianoPage> {
   // Map keyboard keys to their triggered notes for proper release tracking
   final Map<LogicalKeyboardKey, String> _keyboardToNoteMap = {};
   
+  // Map keyboard keys to ALL notes they triggered (including intervals)
+  final Map<LogicalKeyboardKey, Set<String>> _keyboardToAllNotesMap = {};
+  
   // Audio player visibility
   bool _showAudioPlayer = false;
 
@@ -110,7 +113,7 @@ class _PianoPageState extends State<PianoPage> {
     return PianoKeyboard.allKeys[noteIndex + semitones];
   }
 
-  void _playNoteWithIntervals(String note) {
+  void _playNoteWithIntervals(String note, {LogicalKeyboardKey? triggeredByKey}) {
     // Add this note to pressed keys
     _pressedKeys.add(note);
     
@@ -128,9 +131,14 @@ class _PianoPageState extends State<PianoPage> {
       }
     }
     
-    // Animate the keys
+    // If this was triggered by a keyboard key, track all notes it triggered
+    if (triggeredByKey != null) {
+      _keyboardToAllNotesMap[triggeredByKey] = notesToPlay.toSet();
+    }
+    
+    // Animate the keys - add to existing active notes instead of replacing
     setState(() {
-      _activeNotes = notesToPlay.toSet();
+      _activeNotes = _activeNotes.union(notesToPlay.toSet());
     });
     
     // Play chord with calculated intervals
@@ -153,23 +161,52 @@ class _PianoPageState extends State<PianoPage> {
   
   void _scheduleNoteClear() {
     Future.delayed(const Duration(milliseconds: 10), () {
-      if (mounted && _pressedKeys.isEmpty && _pressedKeyboardKeys.isEmpty) {
+      if (mounted) {
         setState(() {
-          _activeNotes = {};
+          // Only keep active notes that are still being pressed
+          _activeNotes = _activeNotes.intersection(_pressedKeys);
         });
       }
     });
   }
   
-  void _releaseNote(String note) {
-    // Remove the note and its intervals from pressed keys
-    _pressedKeys.remove(note);
-    
-    // Also remove any interval notes that might have been triggered with this root note
-    for (int semitones = 1; semitones < 12; semitones++) {
-      if (_intervals[semitones]) {
-        final intervalNote = _getIntervalNote(note, semitones);
-        if (intervalNote != null) _pressedKeys.remove(intervalNote);
+  void _releaseNote(String note, {LogicalKeyboardKey? releasedKey}) {
+    // If this was triggered by a keyboard key release, only remove the specific notes
+    // that were triggered by that key
+    if (releasedKey != null) {
+      final notesToRemove = _keyboardToAllNotesMap[releasedKey];
+      if (notesToRemove != null) {
+        // Only remove notes if they're not being held by other keyboard keys
+        for (final noteToRemove in notesToRemove) {
+          bool noteStillHeld = false;
+          
+          // Check if any other keyboard key is still triggering this note
+          for (final entry in _keyboardToAllNotesMap.entries) {
+            if (entry.key != releasedKey && entry.value.contains(noteToRemove)) {
+              noteStillHeld = true;
+              break;
+            }
+          }
+          
+          // Only remove from pressed keys if not held by another keyboard key
+          if (!noteStillHeld) {
+            _pressedKeys.remove(noteToRemove);
+          }
+        }
+        
+        // Clean up the mapping for this key
+        _keyboardToAllNotesMap.remove(releasedKey);
+      }
+    } else {
+      // Mouse/touch release - remove the note and its intervals from pressed keys
+      _pressedKeys.remove(note);
+      
+      // Also remove any interval notes that might have been triggered with this root note
+      for (int semitones = 1; semitones < 12; semitones++) {
+        if (_intervals[semitones]) {
+          final intervalNote = _getIntervalNote(note, semitones);
+          if (intervalNote != null) _pressedKeys.remove(intervalNote);
+        }
       }
     }
     
@@ -266,7 +303,7 @@ class _PianoPageState extends State<PianoPage> {
       if (noteToPlay != null) {
         // Map this keyboard key to the note it triggered
         _keyboardToNoteMap[event.logicalKey] = noteToPlay;
-        _playNoteWithIntervals(noteToPlay);
+        _playNoteWithIntervals(noteToPlay, triggeredByKey: event.logicalKey);
       }
     } else if (event is KeyUpEvent) {
       // Remove the released key from pressed keys
@@ -276,7 +313,7 @@ class _PianoPageState extends State<PianoPage> {
       final releasedNote = _keyboardToNoteMap[event.logicalKey];
       if (releasedNote != null) {
         _keyboardToNoteMap.remove(event.logicalKey);
-        _releaseNote(releasedNote);
+        _releaseNote(releasedNote, releasedKey: event.logicalKey);
       }
       
       // Schedule clearing if no keys are pressed
@@ -579,7 +616,7 @@ class _PianoPageState extends State<PianoPage> {
                     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
                       if (_showAudioPlayer) {
                         // Expand window height to accommodate audio player
-                        setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 1000));
+                        setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 920));
                       } else {
                         // Collapse window back to original size
                         setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
