@@ -1,6 +1,6 @@
 {
-    "name": "chorder",
-    "short_name": "chorder",
+    "name": "diatonic",
+    "short_name": "diatonic",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -10,16 +10,16 @@ import 'pages/audio_player_page.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    setWindowTitle('Chorder');
+    setWindowTitle('Diatonic');
     setWindowMinSize(const Size(800, 420));
     setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
   }
 
-  runApp(const ChorderApp());
+  runApp(const DiatonicApp());
 }
 
-class ChorderApp extends StatelessWidget {
-  const ChorderApp({super.key});
+class DiatonicApp extends StatelessWidget {
+  const DiatonicApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

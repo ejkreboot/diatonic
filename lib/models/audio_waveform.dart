@@ -44,7 +44,7 @@ class AudioWaveform {
     try {
       // Create temporary PCM file in system temp directory
       final tempDir = Directory.systemTemp;
-      tempFile = File(p.join(tempDir.path, 'chorder_${DateTime.now().millisecondsSinceEpoch}_decoded.pcm'));
+      tempFile = File(p.join(tempDir.path, 'diatonic_${DateTime.now().millisecondsSinceEpoch}_decoded.pcm'));
       final pcmFilePath = tempFile.path;
 
       final ffmpegPath = _getBundledFfmpegPath();

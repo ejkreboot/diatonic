@@ -8,5 +8,5 @@ fi
 flutter clean
 flutter pub get
 flutter build macos --release
-rm -rf /Applications/Chorder.app
-cp -R build/macos/Build/Products/Release/chorder.app /Applications/Chorder.app
+rm -rf /Applications/Diatonic.app
+cp -R build/macos/Build/Products/Release/diatonic.app /Applications/Diatonic.app

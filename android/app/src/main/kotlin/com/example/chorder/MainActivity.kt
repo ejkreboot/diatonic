@@ -1,4 +1,4 @@
-package com.example.chorder
+package com.ericjkort.diatonic
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -2,19 +2,19 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "chorder (Flutter macOS)",
+      "name": "diatonic (Flutter macOS)",
       "request": "launch",
       "type": "dart",
       "deviceId": "macos"
     },
     {
-      "name": "chorder (Flutter iOS)",
+      "name": "diatonic (Flutter iOS)",
       "request": "launch",
       "type": "dart",
       "deviceId": "ios"
     },
     {
-      "name": "chorder (Flutter Android)",
+      "name": "diatonic (Flutter Android)",
       "request": "launch",
       "type": "dart",
       "deviceId": "android"
