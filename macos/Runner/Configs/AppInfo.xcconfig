@@ -11,5 +11,5 @@ PRODUCT_NAME = diatonic
 PRODUCT_BUNDLE_IDENTIFIER = com.ericjkort.diatonic
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.ericjkort. All rights reserved.
 MACOSX_DEPLOYMENT_TARGET = 11.0

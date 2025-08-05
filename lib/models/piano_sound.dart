@@ -38,7 +38,7 @@ class PianoSound {
     final audioFiles = <String>[];
     for (final note in PianoKeyboard.allKeys) {
       for (final dynamic in _dynamicNames) {
-        audioFiles.add('$note-$dynamic.wav');
+        audioFiles.add('$note-$dynamic.m4a');
       }
     }
     await _cache.loadAll(audioFiles);
@@ -62,44 +62,44 @@ class PianoSound {
 
       // Always play root
       final rootPlayer = AudioPlayer();
-      futures.add(rootPlayer.play(AssetSource('audio/$rootNote-$currentDynamicName.wav')));
+      futures.add(rootPlayer.play(AssetSource('audio/$rootNote-$currentDynamicName.m4a')));
 
       // Play intervals if provided
       if (sus2Note != null) {
         final player = AudioPlayer();
-        futures.add(player.play(AssetSource('audio/$sus2Note-$currentDynamicName.wav')));
+        futures.add(player.play(AssetSource('audio/$sus2Note-$currentDynamicName.m4a')));
       }
       if (minorThirdNote != null) {
         final player = AudioPlayer();
-        futures.add(player.play(AssetSource('audio/$minorThirdNote-$currentDynamicName.wav')));
+        futures.add(player.play(AssetSource('audio/$minorThirdNote-$currentDynamicName.m4a')));
       }
       if (majorThirdNote != null) {
         final player = AudioPlayer();
-        futures.add(player.play(AssetSource('audio/$majorThirdNote-$currentDynamicName.wav')));
+        futures.add(player.play(AssetSource('audio/$majorThirdNote-$currentDynamicName.m4a')));
       }
       if (sus4Note != null) {
         final player = AudioPlayer();
-        futures.add(player.play(AssetSource('audio/$sus4Note-$currentDynamicName.wav')));
+        futures.add(player.play(AssetSource('audio/$sus4Note-$currentDynamicName.m4a')));
       }
       if (perfectFifthNote != null) {
         final player = AudioPlayer();
-        futures.add(player.play(AssetSource('audio/$perfectFifthNote-$currentDynamicName.wav')));
+        futures.add(player.play(AssetSource('audio/$perfectFifthNote-$currentDynamicName.m4a')));
       }
       if (augmentedFifthNote != null) {
         final player = AudioPlayer();
-        futures.add(player.play(AssetSource('audio/$augmentedFifthNote-$currentDynamicName.wav')));
+        futures.add(player.play(AssetSource('audio/$augmentedFifthNote-$currentDynamicName.m4a')));
       }
       if (minorSeventhNote != null) {
         final player = AudioPlayer();
-        futures.add(player.play(AssetSource('audio/$minorSeventhNote-$currentDynamicName.wav')));
+        futures.add(player.play(AssetSource('audio/$minorSeventhNote-$currentDynamicName.m4a')));
       }
       if (majorSeventhNote != null) {
         final player = AudioPlayer();
-        futures.add(player.play(AssetSource('audio/$majorSeventhNote-$currentDynamicName.wav')));
+        futures.add(player.play(AssetSource('audio/$majorSeventhNote-$currentDynamicName.m4a')));
       }
       if (ninthNote != null) {
         final player = AudioPlayer();
-        futures.add(player.play(AssetSource('audio/$ninthNote-$currentDynamicName.wav')));
+        futures.add(player.play(AssetSource('audio/$ninthNote-$currentDynamicName.m4a')));
       }
 
       // Play all simultaneously
