@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_size/window_size.dart';
 import 'widgets/piano_keyboard.dart';
+import 'widgets/autorefocus.dart';
 import 'models/piano_sound.dart';
 import 'models/scales.dart';
 import 'pages/audio_player_page.dart';
@@ -46,6 +47,7 @@ class _PianoPageState extends State<PianoPage> {
   final PianoSound _sound = PianoSound();
   final FocusNode _focusNode = FocusNode();
   
+
   // Key and Mode settings
   String _selectedKey = 'None';
   String _selectedMode = 'Ionian (Major)';
@@ -214,7 +216,12 @@ class _PianoPageState extends State<PianoPage> {
     _scheduleNoteClear();
   }
 
-  void _handleKeyPress(KeyEvent event) {
+  KeyEventResult _handleKeyPress(FocusNode node, KeyEvent event) {
+    final isTextEntry = FocusManager.instance.primaryFocus?.context?.findAncestorStateOfType<EditableTextState>();
+    if (isTextEntry != null) {
+      return KeyEventResult.ignored; // Pass event to the text field
+    } 
+
     if (event is KeyDownEvent) {
       // Check if shift is pressed for octave shifting
       final isShiftPressed = event.logicalKey == LogicalKeyboardKey.shiftLeft || 
@@ -304,6 +311,8 @@ class _PianoPageState extends State<PianoPage> {
         // Map this keyboard key to the note it triggered
         _keyboardToNoteMap[event.logicalKey] = noteToPlay;
         _playNoteWithIntervals(noteToPlay, triggeredByKey: event.logicalKey);
+        return KeyEventResult.handled; // mischief managed 
+
       }
     } else if (event is KeyUpEvent) {
       // Remove the released key from pressed keys
@@ -318,19 +327,20 @@ class _PianoPageState extends State<PianoPage> {
       
       // Schedule clearing if no keys are pressed
       _scheduleNoteClear();
+      return KeyEventResult.handled; // mischief managed 
     }
+    return KeyEventResult.ignored; 
   }
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardListener(
+    return AutoRefocus(
       focusNode: _focusNode,
       onKeyEvent: _handleKeyPress,
+      skipTraversal: true,   // doesn't interfere with Tab focus
       child: Focus(
-        autofocus: true,
         child: Scaffold(
           backgroundColor: const Color(0xFF2B2B2B), // Logic Pro dark gray background
-
       body: SingleChildScrollView(
         child: Column(
           children: [

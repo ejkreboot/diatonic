@@ -50,6 +50,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
     _startFocusNode.addListener(() {
       if (!_startFocusNode.hasFocus) _updateLoopFromTextFields();
     });
+    
     _endFocusNode.addListener(() {
       if (!_endFocusNode.hasFocus) _updateLoopFromTextFields();
     });
