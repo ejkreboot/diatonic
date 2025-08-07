@@ -2,7 +2,7 @@
 
 set -e
 
-echo "Running configure script for Slower macOS build..."
+echo "Running configure script for Diatonic macOS build..."
 
 # 1. Check platform
 if [[ "$(uname)" != "Darwin" ]]; then
@@ -19,7 +19,6 @@ FFMPEG_PATH="./macos/Runner/Resources/ffmpeg"
 if [[ ! -f "$FFMPEG_PATH" ]]; then
   echo "ffmpeg not found. Building..."
   ./scripts/macos_build_ffmpeg_universal.sh
-  ./scripts/macos_copy_ffmpeg.sh
 else
   echo "✅ ffmpeg already present."
 fi
@@ -28,14 +27,5 @@ fi
 echo "Injecting ffmpeg into Xcode project (if needed)..."
 ruby ./scripts/macos_add_ffmpeg_to_bundle.rb
 
-# 5. Ensure MACOSX_DEPLOYMENT_TARGET = 11.0 in AppInfo.xcconfig
-XCFILE="macos/Runner/Configs/AppInfo.xcconfig"
-if grep -q "MACOSX_DEPLOYMENT_TARGET" "$XCFILE"; then
-  echo "MACOSX_DEPLOYMENT_TARGET already set in AppInfo.xcconfig"
-else
-  echo "Setting MACOSX_DEPLOYMENT_TARGET = 11.0 in AppInfo.xcconfig"
-  echo "MACOSX_DEPLOYMENT_TARGET = 11.0" >> "$XCFILE"
-fi
-
-echo "Configuration and build complete. Run 'flutter build macos' to build release version."
+echo "Configuration and build complete. Run './scripts/macos_build.sh' to build release version, or use --debug argument to build debug version."
 exit 0

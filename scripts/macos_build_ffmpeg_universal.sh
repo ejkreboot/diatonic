@@ -92,7 +92,13 @@ lipo -create \
 
 echo "✅ Universal FFmpeg built successfully at $OUTPUT_DIR/universal/bin/ffmpeg"
 
-# 5. Copy to Flutter macOS app Resources directory
+# 5 Sign and harden runtime
+
+codesign --force --options runtime --timestamp \
+  --sign "Developer ID Application: Eric Kort (UU9J7A9VZ2)" \
+  "$OUTPUT_DIR/universal/bin/ffmpeg"
+
+# 6. Copy to Flutter macOS app Resources directory
 RESOURCE_TARGET="./macos/Runner/Resources"
 FFMPEG_TARGET="$RESOURCE_TARGET/ffmpeg"
 LICENSE_TARGET="$RESOURCE_TARGET/LICENSE.md"
@@ -102,7 +108,7 @@ mkdir -p "$RESOURCE_TARGET"
 cp "$OUTPUT_DIR/universal/bin/ffmpeg" "$FFMPEG_TARGET"
 chmod +x "$FFMPEG_TARGET"
 
-# 6. Also copy LICENSE.txt
+# 7. Also copy LICENSE.txt
 if [ ! -f "$FFMPEG_DIR/LICENSE.md" ]; then
   echo "⚠️  LICENSE.md not found in ffmpeg source directory. Please provide it."
   exit 1

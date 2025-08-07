@@ -127,8 +127,11 @@ class _PianoPageState extends State<PianoPage> {
       if (_intervals[semitones]) {
         final intervalNote = _getIntervalNote(note, semitones);
         if (intervalNote != null) {
-          notesToPlay.add(intervalNote);
-          _pressedKeys.add(intervalNote);
+          // Only add interval note if no key/mode is selected, or if the note is in the scale
+          if (_selectedKey == 'None' || Scales.isNoteInScale(intervalNote, _selectedKey, _selectedMode)) {
+            notesToPlay.add(intervalNote);
+            _pressedKeys.add(intervalNote);
+          }
         }
       }
     }
@@ -143,18 +146,18 @@ class _PianoPageState extends State<PianoPage> {
       _activeNotes = _activeNotes.union(notesToPlay.toSet());
     });
     
-    // Play chord with calculated intervals
+    // Play chord with calculated intervals - only play notes that are in notesToPlay
     _sound.playChord(
       rootNote: note,
-      sus2Note: notesToPlay.length > 1 && _intervals[2] ? _getIntervalNote(note, 2) : null,
-      minorThirdNote: notesToPlay.length > 1 && _intervals[3] ? _getIntervalNote(note, 3) : null,
-      majorThirdNote: notesToPlay.length > 1 && _intervals[4] ? _getIntervalNote(note, 4) : null,
-      sus4Note: notesToPlay.length > 1 && _intervals[5] ? _getIntervalNote(note, 5) : null,
-      perfectFifthNote: notesToPlay.length > 1 && _intervals[7] ? _getIntervalNote(note, 7) : null,
-      augmentedFifthNote: notesToPlay.length > 1 && _intervals[8] ? _getIntervalNote(note, 8) : null,
-      minorSeventhNote: notesToPlay.length > 1 && _intervals[10] ? _getIntervalNote(note, 10) : null,
-      majorSeventhNote: notesToPlay.length > 1 && _intervals[11] ? _getIntervalNote(note, 11) : null,
-      ninthNote: notesToPlay.length > 1 && _intervals.length > 14 ? _getIntervalNote(note, 14) : null, // 9th if we extend beyond octave
+      sus2Note: notesToPlay.contains(_getIntervalNote(note, 2)) ? _getIntervalNote(note, 2) : null,
+      minorThirdNote: notesToPlay.contains(_getIntervalNote(note, 3)) ? _getIntervalNote(note, 3) : null,
+      majorThirdNote: notesToPlay.contains(_getIntervalNote(note, 4)) ? _getIntervalNote(note, 4) : null,
+      sus4Note: notesToPlay.contains(_getIntervalNote(note, 5)) ? _getIntervalNote(note, 5) : null,
+      perfectFifthNote: notesToPlay.contains(_getIntervalNote(note, 7)) ? _getIntervalNote(note, 7) : null,
+      augmentedFifthNote: notesToPlay.contains(_getIntervalNote(note, 8)) ? _getIntervalNote(note, 8) : null,
+      minorSeventhNote: notesToPlay.contains(_getIntervalNote(note, 10)) ? _getIntervalNote(note, 10) : null,
+      majorSeventhNote: notesToPlay.contains(_getIntervalNote(note, 11)) ? _getIntervalNote(note, 11) : null,
+      ninthNote: notesToPlay.contains(_getIntervalNote(note, 14)) ? _getIntervalNote(note, 14) : null,
     );
     
     // Schedule clearing, but only if no keys are still pressed

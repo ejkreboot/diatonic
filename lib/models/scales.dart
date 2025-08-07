@@ -1,8 +1,24 @@
 class Scales {
-  // Chromatic scale starting from C
+  // Chromatic scale starting from C (using sharps internally)
   static const List<String> _chromaticScale = [
     'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'
   ];
+  
+  // Mapping from display names (with flats) to internal chromatic scale names (with sharps)
+  static const Map<String, String> _keyMapping = {
+    'C': 'C',
+    'C#': 'C#',
+    'D': 'D',
+    'E♭': 'D#',  // E♭ = D#
+    'E': 'E',
+    'F': 'F',
+    'F#': 'F#',
+    'G': 'G',
+    'A♭': 'G#',  // A♭ = G#
+    'A': 'A',
+    'B♭': 'A#',  // B♭ = A#
+    'B': 'B',
+  };
   
   // Mode patterns (intervals in semitones from the root)
   static const Map<String, List<int>> _modePatterns = {
@@ -28,9 +44,15 @@ class Scales {
       throw ArgumentError('Unknown mode: $mode');
     }
     
-    final rootIndex = _chromaticScale.indexOf(key);
-    if (rootIndex == -1) {
+    // Convert display key name to internal chromatic scale name
+    final internalKey = _keyMapping[key];
+    if (internalKey == null) {
       throw ArgumentError('Unknown key: $key');
+    }
+    
+    final rootIndex = _chromaticScale.indexOf(internalKey);
+    if (rootIndex == -1) {
+      throw ArgumentError('Unknown internal key: $internalKey');
     }
     
     final scaleNotes = <String>[];
@@ -58,9 +80,9 @@ class Scales {
     return index == -1 ? -1 : index + 1;
   }
   
-  /// Gets all available keys (natural notes only)
+  /// Gets all available keys (including sharps and flats)
   static List<String> getAvailableKeys() {
-    return ['None', 'C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    return ['None', 'C', 'C#', 'D', 'E♭', 'E', 'F', 'F#', 'G', 'A♭', 'A', 'B♭', 'B'];
   }
   
   /// Gets all available modes
