@@ -45,21 +45,23 @@ class _HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<_HomeShell> {
   bool _showAudioPlayer = false;
+  bool _pendingResizeAfterCollapse = false;
 
   void _toggleAudioPlayer() {
-    setState(() {
-      _showAudioPlayer = !_showAudioPlayer;
-    });
+    final targetShow = !_showAudioPlayer;
 
-    // Resize window based on audio player visibility
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      if (_showAudioPlayer) {
-        // Expand window height to accommodate audio player
+      if (targetShow) {
+        // Expand window first to avoid overflow during expand animation
         setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 920));
+        setState(() => _showAudioPlayer = true);
       } else {
-        // Collapse window back to original size
-        setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
+        // Start collapse animation first; shrink window after animation ends
+        setState(() => _showAudioPlayer = false);
+        _pendingResizeAfterCollapse = true;
       }
+    } else {
+      setState(() => _showAudioPlayer = targetShow);
     }
   }
 
@@ -115,29 +117,46 @@ class _HomeShellState extends State<_HomeShell> {
             ),
           ),
         ),
-        // Audio Player Section
-        if (_showAudioPlayer) ...[
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            height: 500, // finite height constraint
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * .95,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFF393939),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: const Color(0xFF4A4A4A),
-                width: 0.5,
+        // Audio Player Section (kept mounted, collapsed when hidden)
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          onEnd: () {
+            if (!_showAudioPlayer && _pendingResizeAfterCollapse && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+              setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
+              _pendingResizeAfterCollapse = false;
+            }
+          },
+          child: Column(
+            children: [
+              SizedBox(height: _showAudioPlayer ? 16 : 0),
+              ClipRect(
+                child: Align(
+                  heightFactor: _showAudioPlayer ? 1.0 : 0.0,
+                  child: Container(
+                    width: double.infinity,
+                    height: 500, // finite height when shown
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * .95,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF393939),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: const Color(0xFF4A4A4A),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: const AudioPlayerPage(),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: const AudioPlayerPage(),
-            ),
+            ],
           ),
-        ],
+        ),
       ],
     );
   }
