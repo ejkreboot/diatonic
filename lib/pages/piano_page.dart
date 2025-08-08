@@ -47,6 +47,55 @@ class _PianoPageState extends State<PianoPage> {
     'Major 7th',        // 11
   ];
 
+  // Keyboard -> note mapping (base octave mapping, shift modifies octave)
+  static final Map<LogicalKeyboardKey, String> _keyToBaseNote = {
+    // White keys - C3 octave
+    LogicalKeyboardKey.keyA: 'C3',
+    LogicalKeyboardKey.keyS: 'D3',
+    LogicalKeyboardKey.keyD: 'E3',
+    LogicalKeyboardKey.keyF: 'F3',
+    LogicalKeyboardKey.keyG: 'G3',
+    LogicalKeyboardKey.keyH: 'A3',
+    LogicalKeyboardKey.keyJ: 'B3',
+    // Black keys - C3 octave
+    LogicalKeyboardKey.keyW: 'C#3',
+    LogicalKeyboardKey.keyE: 'D#3',
+    LogicalKeyboardKey.keyT: 'F#3',
+    LogicalKeyboardKey.keyY: 'G#3',
+    LogicalKeyboardKey.keyU: 'A#3',
+    // White keys - C4 octave continuation
+    LogicalKeyboardKey.keyK: 'C4',
+    LogicalKeyboardKey.keyL: 'D4',
+    LogicalKeyboardKey.semicolon: 'E4',
+    LogicalKeyboardKey.quoteSingle: 'F4',
+    // Black keys - C4 octave continuation
+    LogicalKeyboardKey.keyO: 'C#4',
+    LogicalKeyboardKey.keyP: 'D#4',
+  };
+
+  // Keyboard -> interval index mapping for toggles
+  static final Map<LogicalKeyboardKey, int> _keyToIntervalIndex = {
+    LogicalKeyboardKey.digit1: 1,
+    LogicalKeyboardKey.digit2: 2,
+    LogicalKeyboardKey.digit3: 3,
+    LogicalKeyboardKey.digit4: 4,
+    LogicalKeyboardKey.digit5: 5,
+    LogicalKeyboardKey.digit6: 6,
+    LogicalKeyboardKey.digit7: 7,
+    LogicalKeyboardKey.digit8: 8,
+    LogicalKeyboardKey.digit9: 9,
+    LogicalKeyboardKey.digit0: 10,
+    LogicalKeyboardKey.minus: 11,
+  };
+
+  void _toggleInterval(int semitoneIndex) {
+    if (semitoneIndex >= 1 && semitoneIndex <= 11) {
+      setState(() {
+        _intervals[semitoneIndex] = !_intervals[semitoneIndex];
+      });
+    }
+  }
+
   // Active notes for animation
   Set<String> _activeNotes = {};
   
@@ -242,121 +291,18 @@ class _PianoPageState extends State<PianoPage> {
       
       // Track the pressed keyboard key
       _pressedKeyboardKeys.add(event.logicalKey);
-      
-      String? noteToPlay;
-      
-      switch (event.logicalKey) {
-        // White keys - C3 octave (C4 if shift pressed)
-        case LogicalKeyboardKey.keyA:
-          noteToPlay = getNote('C3');
-          break;
-        case LogicalKeyboardKey.keyS:
-          noteToPlay = getNote('D3');
-          break;
-        case LogicalKeyboardKey.keyD:
-          noteToPlay = getNote('E3');
-          break;
-        case LogicalKeyboardKey.keyF:
-          noteToPlay = getNote('F3');
-          break;
-        case LogicalKeyboardKey.keyG:
-          noteToPlay = getNote('G3');
-          break;
-        case LogicalKeyboardKey.keyH:
-          noteToPlay = getNote('A3');
-          break;
-        case LogicalKeyboardKey.keyJ:
-          noteToPlay = getNote('B3');
-          break;
-        
-        // Black keys - C3 octave (C4 if shift pressed)
-        case LogicalKeyboardKey.keyW:
-          noteToPlay = getNote('C#3');
-          break;
-        case LogicalKeyboardKey.keyE:
-          noteToPlay = getNote('D#3');
-          break;
-        case LogicalKeyboardKey.keyT:
-          noteToPlay = getNote('F#3');
-          break;
-        case LogicalKeyboardKey.keyY:
-          noteToPlay = getNote('G#3');
-          break;
-        case LogicalKeyboardKey.keyU:
-          noteToPlay = getNote('A#3');
-          break;
-        
-        // White keys - C4 octave continuation (C5 if shift pressed)
-        case LogicalKeyboardKey.keyK:
-          noteToPlay = getNote('C4');
-          break;
-        case LogicalKeyboardKey.keyL:
-          noteToPlay = getNote('D4');
-          break;
-        case LogicalKeyboardKey.semicolon:
-          noteToPlay = getNote('E4');
-          break;
-        case LogicalKeyboardKey.quoteSingle:
-          noteToPlay = getNote('F4');
-          break;
-        
-        // Black keys - C4 octave continuation (C5 if shift pressed)
-        case LogicalKeyboardKey.keyO:
-          noteToPlay = getNote('C#4');
-          break;
-        case LogicalKeyboardKey.keyP:
-          noteToPlay = getNote('D#4');
-          break;
-      }
-      
-      // Check for interval toggle shortcuts (number keys)
-      int? intervalToToggle;
-      switch (event.logicalKey) {
-        case LogicalKeyboardKey.digit1:
-          intervalToToggle = 1;
-          break;
-        case LogicalKeyboardKey.digit2:
-          intervalToToggle = 2;
-          break;
-        case LogicalKeyboardKey.digit3:
-          intervalToToggle = 3;
-          break;
-        case LogicalKeyboardKey.digit4:
-          intervalToToggle = 4;
-          break;
-        case LogicalKeyboardKey.digit5:
-          intervalToToggle = 5;
-          break;
-        case LogicalKeyboardKey.digit6:
-          intervalToToggle = 6;
-          break;
-        case LogicalKeyboardKey.digit7:
-          intervalToToggle = 7;
-          break;
-        case LogicalKeyboardKey.digit8:
-          intervalToToggle = 8;
-          break;
-        case LogicalKeyboardKey.digit9:
-          intervalToToggle = 9;
-          break;
-        case LogicalKeyboardKey.digit0:
-          intervalToToggle = 10;
-          break;
-        case LogicalKeyboardKey.minus:
-          intervalToToggle = 11;
-          break;
-      }
-      
-      // Toggle interval if a number key was pressed
-      if (intervalToToggle != null) {
-        final interval = intervalToToggle;
-        setState(() {
-          _intervals[interval] = !_intervals[interval];
-        });
+
+      // First, handle interval toggles
+      final toggleIndex = _keyToIntervalIndex[event.logicalKey];
+      if (toggleIndex != null) {
+        _toggleInterval(toggleIndex);
         return KeyEventResult.handled;
       }
-      
-      if (noteToPlay != null) {
+
+      // Then, map to note plays
+      final baseNote = _keyToBaseNote[event.logicalKey];
+      if (baseNote != null) {
+        final noteToPlay = getNote(baseNote);
         // Map this keyboard key to the note it triggered
         _keyboardToNoteMap[event.logicalKey] = noteToPlay;
         _playNoteWithIntervals(noteToPlay, triggeredByKey: event.logicalKey);
