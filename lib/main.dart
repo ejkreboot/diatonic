@@ -326,11 +326,12 @@ class _PianoPageState extends State<PianoPage> {
       if (releasedNote != null) {
         _keyboardToNoteMap.remove(event.logicalKey);
         _releaseNote(releasedNote, releasedKey: event.logicalKey);
-      }
-      
+      }      
       // Schedule clearing if no keys are pressed
       _scheduleNoteClear();
       return KeyEventResult.handled; // mischief managed 
+    } else if (event is KeyRepeatEvent) {
+      return KeyEventResult.handled; // Consume the repeat to prevent system beep
     }
     return KeyEventResult.ignored; 
   }

@@ -42,6 +42,11 @@ class PianoSound {
       }
     }
     await _cache.loadAll(audioFiles);
+
+    // prewarm the audio player
+    final mutePlayer = AudioPlayer();
+    await mutePlayer.play(AssetSource('audio/A#0-Forte.m4a'), volume: 0);
+    debugPrint("Muted playback started");
   }
 
   Future<void> playChord({
