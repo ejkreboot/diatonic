@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:io';
+import 'dart:async';
 import '../models/audio_waveform.dart';
 import '../widgets/waveform_visualizer.dart';
 import '../widgets/saved_regions_panel.dart';
@@ -19,7 +20,6 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
   final AudioPlayer _player = AudioPlayer();
   List<double> amplitudes = [];
   String? _fileName;
-  String? _filePath;
   Duration _currentPosition = Duration.zero;
   Duration _audioDuration = Duration.zero;
   double? _loopStartFraction;
@@ -34,6 +34,9 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
 
   late final AnimationController _scaleController;
   late final Animation<double> _scaleAnimation;
+
+  StreamSubscription<Duration?>? _durationSub;
+  StreamSubscription<Duration>? _positionSub;
 
   @override
   void initState() {
@@ -55,7 +58,8 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
       if (!_endFocusNode.hasFocus) _updateLoopFromTextFields();
     });
 
-    _player.durationStream.listen((duration) {
+    _durationSub = _player.durationStream.listen((duration) {
+      if (!mounted) return;
       if (duration != null) {
         setState(() {
           _audioDuration = duration;
@@ -63,7 +67,8 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
       }
     });
 
-    _player.positionStream.listen((position) {
+    _positionSub = _player.positionStream.listen((position) {
+      if (!mounted) return;
       setState(() {
         _currentPosition = position;
 
@@ -149,6 +154,8 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
 
   @override
   void dispose() {
+  _durationSub?.cancel();
+  _positionSub?.cancel();
     _scaleController.dispose();
     _startFocusNode.dispose();
     _endFocusNode.dispose();
@@ -157,6 +164,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
   }
 
   Future<void> _pickAndLoadAudio() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
     });
@@ -171,6 +179,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
         String path = result.files.single.path!;
         
         // Clear previous selections and saved regions
+        if (!mounted) return;
         setState(() {
           _loopStartFraction = null;
           _loopEndFraction = null;
@@ -186,14 +195,15 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
         await _player.setFilePath(path);
         await _player.setVolume(_volume); // Initialize volume
 
+        if (!mounted) return;
         setState(() {
-          _filePath = path;
           _fileName = File(path).uri.pathSegments.last;
           _currentPosition = Duration.zero; // <- optional, resets displayed time
         });
 
         // Load regions AFTER setting file name
         final loadedRegions = await SavedRegion.loadRegions(_fileName!);
+        if (!mounted) return;
         setState(() {
           _savedRegions.addAll(loadedRegions);
         });
@@ -201,9 +211,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
     } catch (e) {
       debugPrint('Error loading audio: $e');
     } finally {
-      setState(() {
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 

@@ -1,12 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:window_size/window_size.dart';
 import '../widgets/piano_keyboard.dart';
 import '../widgets/autorefocus.dart';
 import '../models/piano_sound.dart';
 import '../models/scales.dart';
-import 'audio_player_page.dart';
 
 class PianoPage extends StatefulWidget {
   const PianoPage({super.key});
@@ -113,12 +110,7 @@ class _PianoPageState extends State<PianoPage> {
   // This lets us release interval notes when the UI root key is released
   final Map<String, Set<String>> _rootToAllNotesMap = {};
   
-  // Audio player visibility
-  bool _showAudioPlayer = false;
 
-  // Piano dynamic level control (0-4)
-  int _pianoDynamicLevel = 2; // Start at MezzoPiano (middle level)
-  
   // Dynamic level names are sourced from PianoSound.currentDynamic for display
 
   // Get current scale notes
@@ -332,9 +324,7 @@ class _PianoPageState extends State<PianoPage> {
       focusNode: _focusNode,
       onKeyEvent: _handleKeyPress,
       skipTraversal: true,   // doesn't interfere with Tab focus
-      child: Scaffold(
-          backgroundColor: const Color(0xFF2B2B2B), // Logic Pro dark gray background
-      body: SingleChildScrollView(
+      child: SingleChildScrollView(
         child: Column(
           children: [
             // Piano keyboard - full width dark container at top
@@ -381,96 +371,35 @@ class _PianoPageState extends State<PianoPage> {
                       maxWidth: MediaQuery.of(context).size.width * .95,
                     ),
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF393939), // Logic Pro panel gray
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: const Color(0xFF4A4A4A),
-                        width: 0.5,
-                      ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF393939), // Logic Pro panel gray
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
                     ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Single row layout with Piano Volume on left, Key & Mode in middle, Intervals on right
-                    Row(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Left side: Piano Dynamic Level (horizontal slider)
-                        SizedBox(
-                          height: 80,
-                          width: 80,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.volume_up,
-                                size: 14,
-                                color: const Color(0xFFF9931A),
-                              ),
-                              const SizedBox(height: 10), // Match spacing with other sections
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 4,
-                                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                                  showValueIndicator: ShowValueIndicator.never,
-                                  activeTrackColor: const Color(0xFFF9931A),
-                                  inactiveTrackColor: const Color(0xFF5A5A5A),
-                                  thumbColor: const Color(0xFFF9931A),
-                                  overlayColor: const Color(0xFFF9931A).withValues(alpha: 0.2),
-                                ),
-                                child: SizedBox(
-                                  width: 70,
-                                  child: Slider(
-                                    min: 0,
-                                    max: 4,
-                                    divisions: 4,
-                                    value: _pianoDynamicLevel.toDouble(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _pianoDynamicLevel = value.round();
-                                      });
-                                      _sound.setDynamicLevel(_pianoDynamicLevel);
-                                    },
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _sound.currentDynamic,
-                                style: const TextStyle(
-                                  color: Color(0xFFE5E5E5),
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        // Middle: Key and Mode selection
+                        // Left: Key/Mode dropdowns
                         Expanded(
                           flex: 2,
-                          child: Column(
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Key & Mode',
-                                style: TextStyle(
-                                  color: const Color(0xFFF9931A),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  // Key dropdown
-                                  Expanded(
-                                    child: Container(
+                              // Key label + dropdown
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Key',
+                                      style: TextStyle(
+                                        color: Color(0xFFF9931A),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Container(
                                       height: 28,
                                       padding: const EdgeInsets.symmetric(horizontal: 8),
                                       decoration: BoxDecoration(
@@ -509,12 +438,27 @@ class _PianoPageState extends State<PianoPage> {
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Mode dropdown
-                                  Expanded(
-                                    flex: 2,
-                                    child: Container(
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Mode label + dropdown
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Mode',
+                                      style: TextStyle(
+                                        color: Color(0xFFF9931A),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Container(
                                       height: 28,
                                       padding: const EdgeInsets.symmetric(horizontal: 8),
                                       decoration: BoxDecoration(
@@ -553,8 +497,8 @@ class _PianoPageState extends State<PianoPage> {
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -566,10 +510,10 @@ class _PianoPageState extends State<PianoPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Intervals',
                                 style: TextStyle(
-                                  color: const Color(0xFFF9931A),
+                                  color: Color(0xFFF9931A),
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   letterSpacing: 0.3,
@@ -598,100 +542,12 @@ class _PianoPageState extends State<PianoPage> {
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Audio Player Toggle - Clean caret + text + line design
-              Container(
-                width: double.infinity,
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * .95,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _showAudioPlayer = !_showAudioPlayer;
-                    });
-                    
-                    // Resize window based on audio player visibility
-                    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-                      if (_showAudioPlayer) {
-                        // Expand window height to accommodate audio player
-                        setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 920));
-                      } else {
-                        // Collapse window back to original size
-                        setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
-                      }
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _showAudioPlayer ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
-                          color: const Color(0xFFE5E5E5),
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _showAudioPlayer ? 'Hide Audio Player' : 'Show Audio Player',
-                          style: const TextStyle(
-                            color: Color(0xFFE5E5E5),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Container(
-                            height: 1,
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color(0xFF4A4A4A),
-                                  Color(0xFF2A2A2A),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-              ),
-              // Audio Player Section
-              if (_showAudioPlayer) ...[
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  height: 500, // Add finite height constraint
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * .95,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF393939),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: const Color(0xFF4A4A4A),
-                      width: 0.5,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: const AudioPlayerPage(),
-                  ),
-                ),
-              ],
                 ],
               ),
             ),
           ],
         ),
-  ),
       ),
     );
   }
