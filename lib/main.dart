@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:window_size/window_size.dart';
 import 'pages/piano_page.dart';
 import 'pages/audio_player_page.dart';
@@ -36,8 +37,12 @@ class DiatonicApp extends StatelessWidget {
   }
 }
 
+class _TogglePlayIntent extends Intent {
+  const _TogglePlayIntent();
+}
+
 class _HomeShell extends StatefulWidget {
-  const _HomeShell({Key? key}) : super(key: key);
+  const _HomeShell({super.key});
 
   @override
   State<_HomeShell> createState() => _HomeShellState();
@@ -46,6 +51,7 @@ class _HomeShell extends StatefulWidget {
 class _HomeShellState extends State<_HomeShell> {
   bool _showAudioPlayer = false;
   bool _pendingResizeAfterCollapse = false;
+  final audioController = AudioPlayerController();
 
   void _toggleAudioPlayer() {
     final targetShow = !_showAudioPlayer;
@@ -67,47 +73,103 @@ class _HomeShellState extends State<_HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const PianoPage(),
-        const SizedBox(height: 24),
-        // Audio Player Toggle - Clean caret + text + line design
-        Container(
-          width: double.infinity,
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * .95,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: InkWell(
-            onTap: _toggleAudioPlayer,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
+    return Shortcuts(
+      shortcuts: <ShortcutActivator, Intent>{
+        const SingleActivator(LogicalKeyboardKey.space, includeRepeats: false): const _TogglePlayIntent(),
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          _TogglePlayIntent: CallbackAction<_TogglePlayIntent>(onInvoke: (intent) {
+            // Don’t trigger when typing in text fields
+            final isTextEntry = FocusManager.instance.primaryFocus?.context?.findAncestorStateOfType<EditableTextState>();
+            if (isTextEntry != null) return null;
+            audioController.togglePlayPause();
+            return null;
+          }),
+        },
+        child: Column(
+          children: [
+            const PianoPage(),
+            const SizedBox(height: 24),
+            // Audio Player Toggle - Clean caret + text + line design
+            Container(
+              width: double.infinity,
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * .95,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: InkWell(
+                onTap: _toggleAudioPlayer,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _showAudioPlayer ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
+                        color: const Color(0xFFE5E5E5),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _showAudioPlayer ? 'Hide Audio Player' : 'Show Audio Player',
+                        style: const TextStyle(
+                          color: Color(0xFFE5E5E5),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Container(
+                          height: 1,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF4A4A4A),
+                                Color(0xFF2A2A2A),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Audio Player Section (kept mounted, collapsed when hidden)
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              onEnd: () {
+                if (!_showAudioPlayer && _pendingResizeAfterCollapse && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+                  setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
+                  _pendingResizeAfterCollapse = false;
+                }
+              },
+              child: Column(
                 children: [
-                  Icon(
-                    _showAudioPlayer ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
-                    color: const Color(0xFFE5E5E5),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _showAudioPlayer ? 'Hide Audio Player' : 'Show Audio Player',
-                    style: const TextStyle(
-                      color: Color(0xFFE5E5E5),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xFF4A4A4A),
-                            Color(0xFF2A2A2A),
-                          ],
+                  SizedBox(height: _showAudioPlayer ? 16 : 0),
+                  ClipRect(
+                    child: Align(
+                      heightFactor: _showAudioPlayer ? 1.0 : 0.0,
+                      child: Container(
+                        width: double.infinity,
+                        height: 500, // finite height when shown
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * .95,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF393939),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: const Color(0xFF4A4A4A),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: AudioPlayerPage(controller: audioController),
                         ),
                       ),
                     ),
@@ -115,49 +177,9 @@ class _HomeShellState extends State<_HomeShell> {
                 ],
               ),
             ),
-          ),
+          ],
         ),
-        // Audio Player Section (kept mounted, collapsed when hidden)
-        AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          onEnd: () {
-            if (!_showAudioPlayer && _pendingResizeAfterCollapse && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-              setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
-              _pendingResizeAfterCollapse = false;
-            }
-          },
-          child: Column(
-            children: [
-              SizedBox(height: _showAudioPlayer ? 16 : 0),
-              ClipRect(
-                child: Align(
-                  heightFactor: _showAudioPlayer ? 1.0 : 0.0,
-                  child: Container(
-                    width: double.infinity,
-                    height: 500, // finite height when shown
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * .95,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF393939),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: const Color(0xFF4A4A4A),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: const AudioPlayerPage(),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -9,8 +9,28 @@ import '../widgets/waveform_visualizer.dart';
 import '../widgets/saved_regions_panel.dart';
 import '../models/saved_regions.dart';
 
+/// Controller to control the AudioPlayerPage from outside (e.g., for keyboard shortcuts)
+class AudioPlayerController {
+  _AudioPlayerPageState? _state;
+
+  void _attach(_AudioPlayerPageState state) {
+    _state = state;
+  }
+
+  void _detach(_AudioPlayerPageState state) {
+    if (identical(_state, state)) {
+      _state = null;
+    }
+  }
+
+  void togglePlayPause() {
+    _state?._playPause();
+  }
+}
+
 class AudioPlayerPage extends StatefulWidget {
-  const AudioPlayerPage({super.key});
+  final AudioPlayerController? controller;
+  const AudioPlayerPage({super.key, this.controller});
 
   @override
   State<AudioPlayerPage> createState() => _AudioPlayerPageState();
@@ -41,6 +61,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
   @override
   void initState() {
     super.initState();
+  widget.controller?._attach(this);
 
     _scaleController = AnimationController(
       vsync: this,
@@ -154,6 +175,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
 
   @override
   void dispose() {
+    widget.controller?._detach(this);
   _durationSub?.cancel();
   _positionSub?.cancel();
     _scaleController.dispose();
@@ -161,6 +183,15 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
     _endFocusNode.dispose();
     _player.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant AudioPlayerPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._detach(this);
+      widget.controller?._attach(this);
+    }
   }
 
   Future<void> _pickAndLoadAudio() async {

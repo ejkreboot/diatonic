@@ -260,10 +260,11 @@ class _PianoPageState extends State<PianoPage> {
   }
 
   KeyEventResult _handleKeyPress(FocusNode node, KeyEvent event) {
-    final isTextEntry = FocusManager.instance.primaryFocus?.context?.findAncestorStateOfType<EditableTextState>();
-    if (isTextEntry != null) {
-      return KeyEventResult.ignored; // Pass event to the text field
-    } 
+    final focusedContext = FocusManager.instance.primaryFocus?.context;
+    final editingState = focusedContext?.findAncestorStateOfType<EditableTextState>();
+    if (editingState != null) {
+      return KeyEventResult.ignored; // Let text input receive the event fully
+    }
 
     if (event is KeyDownEvent) {
       // Check if shift is pressed for octave shifting
@@ -324,6 +325,7 @@ class _PianoPageState extends State<PianoPage> {
       focusNode: _focusNode,
       onKeyEvent: _handleKeyPress,
       skipTraversal: true,   // doesn't interfere with Tab focus
+  allowTextFieldFocus: true,
       child: SingleChildScrollView(
         child: Column(
           children: [

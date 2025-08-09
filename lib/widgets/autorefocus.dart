@@ -7,6 +7,8 @@ class AutoRefocus extends StatefulWidget {
   final FocusOnKeyEventCallback? onKeyEvent;
   final bool skipTraversal;
   final bool canRequestFocus;
+  // If true, do NOT reclaim focus when a TextField gains focus.
+  final bool allowTextFieldFocus;
 
   const AutoRefocus({
     super.key,
@@ -15,6 +17,7 @@ class AutoRefocus extends StatefulWidget {
     this.onKeyEvent,
     this.skipTraversal = true,
     this.canRequestFocus = true,
+  this.allowTextFieldFocus = true,
   });
 
   @override
@@ -28,19 +31,32 @@ class _AutoRefocusState extends State<AutoRefocus> {
     FocusManager.instance.addListener(_handleFocusChange);
   }
 
-void _handleFocusChange() {
-  final currentFocus = FocusManager.instance.primaryFocus;
-  final focusedWidget = currentFocus?.context?.widget;
-  final editableHasFocus = focusedWidget is EditableText;
+  void _handleFocusChange() {
+    final currentFocus = FocusManager.instance.primaryFocus;
+    final context = currentFocus?.context;
+    // Detect if an EditableText (TextField, TextFormField, etc.) is in the focus ancestry
+    bool editableHasFocus = false;
+    if (context != null) {
+      // Direct widget check
+      if (context.widget is EditableText) {
+        editableHasFocus = true;
+      } else {
+        // Ancestor state check (covers internal focus nodes inside TextField)
+        final editableState = context.findAncestorStateOfType<EditableTextState>();
+        if (editableState != null) {
+          editableHasFocus = true;
+        }
+      }
+    }
 
-  // Reclaim focus if:
-  // 1. We're not focused
-  // 2. No editable widget has focus
+    if (editableHasFocus && widget.allowTextFieldFocus) {
+      return; // Let text fields keep focus
+    }
+
   if (!widget.focusNode.hasFocus && !editableHasFocus) {
-    debugPrint('Reclaiming focus for: ${widget.focusNode}');
-    widget.focusNode.requestFocus();
+      widget.focusNode.requestFocus();
+    }
   }
-}
 
   @override
   void dispose() {
