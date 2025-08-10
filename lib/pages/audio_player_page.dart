@@ -221,7 +221,6 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> with TickerProviderSt
 
         amplitudes.clear();
         amplitudes = await compute(readWaveformInIsolate, path);
-        debugPrint("Amplitude samples: ${amplitudes.length}");
 
         await _player.setFilePath(path);
         await _player.setVolume(_volume); // Initialize volume

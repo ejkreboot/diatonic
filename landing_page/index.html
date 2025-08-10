@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diatonic — Piano & Audio Toolkit for macOS</title>
+  <meta name="description" content="Diatonic is a clean, modern piano + audio toolkit for composition and transcription on macOS. Interactive keyboard, scales & modes, looping, time-warp playback." />
+  <meta property="og:title" content="Diatonic — Piano & Audio Toolkit for macOS" />
+  <meta property="og:description" content="Interactive piano with scales & modes plus a built‑in audio player for looping and time‑warped playback." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="images/og-diatonic.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="favicon.ico" />
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --panel: #ffffff;
+      --panel-2: #f9f9fa;
+      --text: #1d1d1f;
+      --muted: #6e6e73;
+      --accent: #ff8a1d;
+      --accent-2: #b94e00;
+      --stroke: #d2d2d7;
+      --radius: 14px;
+      --shadow: 0 4px 14px rgba(0,0,0,.08);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1100px, 92vw); margin: 0 auto; }
+
+    header {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: saturate(180%) blur(14px);
+      background: rgba(255,255,255,0.8);
+      border-bottom: 1px solid var(--stroke);
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+    .brand { display:flex; gap:.6rem; align-items:center; font-weight:700; }
+    .brand-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+    .nav a { color: var(--muted); margin-left: 18px; font-size: 14px; }
+    .nav a:hover { color: var(--text); }
+
+    .hero { padding: clamp(48px, 8vw, 96px) 0 24px; text-align: center; }
+    .title { font-size: clamp(36px, 5vw, 56px); margin: 0 0 12px; font-weight: 800; }
+    .subtitle { color: var(--muted); font-size: clamp(16px, 2.3vw, 20px); margin: 0 auto 28px; width: min(720px, 92%); }
+
+    .cta { display:flex; gap:14px; justify-content:center; flex-wrap: wrap; }
+    .btn { display:inline-flex; align-items:center; gap:10px; padding:14px 18px; border-radius: 12px; border: 1px solid var(--stroke); background: var(--panel); color: var(--text); box-shadow: var(--shadow); transition: transform .08s ease; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+    .btn:hover { transform: translateY(-1px); }
+
+    .hero-card { margin-top: 28px; background: var(--panel); border:1px solid var(--stroke); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .hero-media img { width: 100%; display:block; }
+    .caption { color: var(--muted); font-size: 13px; text-align:center; padding: 10px 14px 16px; }
+
+    .section { padding: clamp(40px, 8vw, 80px) 0; }
+    .section h2 { font-size: clamp(24px, 3.6vw, 34px); margin: 0 0 22px; text-align:center; }
+    .grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: var(--panel); border:1px solid var(--stroke); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .kicker { color: var(--accent-2); font-weight:700; text-transform: uppercase; font-size: 12px; margin-bottom: 6px; display:block; }
+    .card h3 { margin: 0 0 8px; font-size: 20px; }
+    .card p { margin: 0; color: var(--muted); }
+
+    .band { background: var(--panel-2); border-top:1px solid var(--stroke); border-bottom:1px solid var(--stroke); padding: 0; }
+    .band .frame { width: min(1200px, 96vw); margin: 40px auto; border: 1px solid var(--stroke); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
+    .band img { width: 100%; display:block; }
+
+    .steps { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
+    @media (max-width: 900px) { .steps { grid-template-columns: 1fr; } }
+    .step { padding: 18px; border:1px solid var(--stroke); border-radius: var(--radius); background: var(--panel); }
+    .step .num { width: 34px; height: 34px; border-radius: 10px; display:inline-grid; place-items:center; font-weight:800; background: var(--accent); color:#fff; margin-bottom: 10px; }
+
+    footer { padding: 36px 0; border-top:1px solid var(--stroke); color: var(--muted); font-size: 14px; }
+    footer .row { display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="brand" href="#">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span>Diatonic</span>
+      </a>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#download">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container" id="home">
+      <h1 class="title">Your Desktop Piano and Time Warping Media Player</h1>
+      <p class="subtitle">Theory-aware keyboard and audio player for composition and transcription.</p>
+      <div class="cta" id="download">
+        <a class="btn primary" href="./assets/Diatonic.app/" role="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a4 4 0 0 1 4 4v5.586l1.293-1.293 1.414 1.414L12 19.414 5.293 12.707l1.414-1.414L8 12.586V7a4 4 0 0 1 4-4Z"/></svg>
+          <span>Download for macOS</span>
+          <span class="hint mono">Universal</span>
+        </a>
+        <a class="btn" href="#demo" role="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z"/></svg>
+          <span>Watch demo</span>
+        </a>
+      </div>
+      <div class="hero-card">
+        <div class="hero-media">
+          <!-- Replace with your real hero screenshot -->
+          <img src="images/diatonic-hero.png" alt="Diatonic macOS app screenshot showing the piano and controls" />
+        </div>
+        <p class="caption">The precision tools you need in a beautiful interface.</p>
+      </div>
+    </section>
+
+    <section class="section container" id="features">
+      <h2>Designed for flow</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="kicker">Interactive Piano</span>
+          <h3>Visualize theory, hear results</h3>
+          <p>Play notes or auto‑stack intervals with one click. Highlight by key and mode to sketch ideas fast.</p>
+        </article>
+        <article class="card">
+          <span class="kicker">Audio Player</span>
+          <h3>Loop, slow down, focus</h3>
+          <p>Load a track, set A/B markers, and time‑warp playback to transcribe tricky passages without losing pitch.</p>
+        </article>
+        <article class="card">
+          <span class="kicker">Built for macOS</span>
+          <h3>Fast, native, distraction‑free</h3>
+          <p>Notarized universal binary for Apple&nbsp;Silicon and Intel. Thoughtful shortcuts and a clean dark UI.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="band" aria-label="App gallery">
+      <div class="frame">
+        <!-- Replace with your wide screenshot -->
+        <img src="images/diatonic-wide.png" alt="Full-width view of Diatonic with large piano and controls" />
+      </div>
+    </section>
+
+    <section class="section container" id="how">
+      <h2>How it works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="num">1</div>
+          <h3>Load a song</h3>
+          <p>Drop in an audio file and scrub the waveform to where you want to work.</p>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <h3>Set key, mode & intervals</h3>
+          <p>Color‑code the keyboard by scale and add harmonies with interval buttons.</p>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <h3>Loop & play along</h3>
+          <p>Mark a region, slow it down, and practice or transcribe with clarity.</p>
+        </div>
+      </div>
+      <div class="sp-16"></div>
+      <p class="center muted">Free updates • No ads • Local processing</p>
+    </section>
+
+    <section class="section container center">
+      <h2>Get Diatonic for macOS</h2>
+      <p class="subtitle">Start composing and transcribing with an instrument‑first workflow.</p>
+      <div class="cta">
+        <a class="btn primary" href="#">Download</a>
+        <a class="btn" href="#demo">Watch demo</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container row">
+      <nav>
+        <a href="#support">Support</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#press">Press kit</a>
+      </nav>
+      <div>© <span id="y"></span> Diatonic. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    // tiny QoL touches
+    document.getElementById('y').textContent = new Date().getFullYear();
+    // smooth scroll for on‑page anchors
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href');
+        if (id && id.length > 1) {
+          const el = document.querySelector(id);
+          if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

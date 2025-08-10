@@ -112,6 +112,45 @@ class _PianoPageState extends State<PianoPage> {
   
 
   // Dynamic level names are sourced from PianoSound.currentDynamic for display
+  static const List<String> _dynamicAbbrevs = ['pp','p','mp','mf','f'];
+  // Slider-based dynamics control
+  Widget _buildDynamicsSlider() {
+    return SizedBox(
+      width: 60,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(Icons.volume_up, size: 18, color: Color(0xFFF9931A)),
+          const SizedBox(height: 6),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 3,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+              activeTrackColor: const Color(0xFFF9931A),
+              inactiveTrackColor: const Color(0xFF5A5A5A),
+              thumbColor: const Color(0xFFF9931A),
+            ),
+            child: Slider(
+              min: 0,
+              max: 4,
+              divisions: 4,
+              value: _sound.dynamicLevel.toDouble(),
+              onChanged: (v) {
+                setState(() => _sound.setDynamicLevel(v.round()));
+              },
+            ),
+          ),
+          const SizedBox(height: 4),
+          Tooltip(
+            message: _sound.currentDynamic,
+            waitDuration: const Duration(milliseconds: 300),
+          ),
+        ],
+      ),
+    );
+  }
 
   // Get current scale notes
   List<String> get _currentScaleNotes => Scales.getScaleNotes(_selectedKey, _selectedMode);
@@ -380,7 +419,10 @@ class _PianoPageState extends State<PianoPage> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Left: Key/Mode dropdowns
+                        // Dynamics first
+                        _buildDynamicsSlider(),
+                        const SizedBox(width: 24),
+                        // Key/Mode dropdowns
                         Expanded(
                           flex: 2,
                           child: Row(

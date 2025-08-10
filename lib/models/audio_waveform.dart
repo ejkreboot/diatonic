@@ -50,21 +50,29 @@ class AudioWaveform {
       final ffmpegPath = _getBundledFfmpegPath();
 
       // Decode MP3 to raw PCM 16-bit LE signed audio
-      final result = await Process.run(
-        ffmpegPath,
-        [
-          '-i', filePath,
-          '-f', 's16le',
-          '-acodec', 'pcm_s16le',
-          '-ac', '1',
-          '-ar', '44100',
-          pcmFilePath,
-        ],
-        runInShell: false,
-      );
+      final args = [
+        '-hide_banner',
+        '-loglevel', 'error', // suppress normal info, keep errors
+        '-i', filePath,
+        '-f', 's16le',
+        '-acodec', 'pcm_s16le',
+        '-ac', '1',
+        '-ar', '44100',
+        pcmFilePath,
+      ];
+
+      final result = await Process.run(ffmpegPath, args, runInShell: false);
 
       if (result.exitCode != 0) {
-        throw Exception('Failed to decode MP3:\n${result.stderr}');
+        debugPrint('FFmpeg path: $ffmpegPath');
+        debugPrint('FFmpeg exists: ${File(ffmpegPath).existsSync()}');
+        try {
+          final stat = FileStat.statSync(ffmpegPath);
+          debugPrint('FFmpeg mode: ${stat.modeString()} size: ${stat.size} modified: ${stat.modified}');
+        } catch (_) {}
+        debugPrint('FFmpeg stderr: ${result.stderr}');
+        debugPrint('FFmpeg stdout: ${result.stdout}');
+        throw Exception('Failed to decode MP3 (exit ${result.exitCode}).');
       }
 
       final pcmBytes = await tempFile.readAsBytes();
@@ -123,13 +131,20 @@ class AudioWaveform {
 
   String _getBundledFfmpegPath() {
     final executableDir = File(Platform.resolvedExecutable).parent.parent;
-    final bundledResourcePath = p.join(executableDir.path, 'Resources', 'ffmpeg');
-    
-    if (File(bundledResourcePath).existsSync()) {
-      return bundledResourcePath;
+    final candidates = [
+      p.join(executableDir.path, 'Resources', 'ffmpeg'),              // current location
+      p.join(executableDir.path, 'MacOS', 'ffmpeg'),                  // if moved beside main executable
+      p.join(executableDir.path, 'MacOS', 'ffmpeg-helper'),           // optional renamed helper
+    ];
+
+    for (final c in candidates) {
+      final f = File(c);
+      if (f.existsSync()) {
+        return c;
+      }
     }
 
-    throw Exception('❌ ffmpeg binary not found.');
+    throw Exception('❌ ffmpeg binary not found in: ${candidates.join(', ')}');
   }
 }
 

@@ -9,7 +9,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowTitle('Diatonic');
-    setWindowMinSize(const Size(800, 420));
+    setWindowMinSize(const Size(850, 420));
     setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 420));
   }
 
@@ -42,7 +42,7 @@ class _TogglePlayIntent extends Intent {
 }
 
 class _HomeShell extends StatefulWidget {
-  const _HomeShell({super.key});
+  const _HomeShell();
 
   @override
   State<_HomeShell> createState() => _HomeShellState();

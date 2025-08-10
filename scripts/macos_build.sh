@@ -1,22 +1,57 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-if [[ "$(uname)" != "Darwin" ]]; then
-  echo "⚠️  This build / install script is for macOS only. Stay tuned for future developments!"
-  exit 0
-fi
+# --- Config ---
+APP_NAME="Diatonic"                          # display name (no .app)
+APP_BUNDLE_NAME="${APP_NAME}.app"            # bundle name as it appears in Finder
+IDENTITY='Developer ID Application: Eric Kort (UU9J7A9VZ2)'
+NOTARY_PROFILE="${NOTARY_PROFILE:-MyNotaryProfile}"
 
-# Parse command-line argument
-if [[ "$1" == "--debug" ]]; then
-  MODE="Debug"
-  BUILD_FLAG="--debug"
-  IS_DEBUG=true
-else
-  MODE="Release"
-  BUILD_FLAG="--release"
-  IS_DEBUG=false
-fi
-
+APP_PATH="./build/macos/Build/Products/Release/${APP_BUNDLE_NAME}"
+DMG_NAME="${APP_NAME}-Installer.dmg"
+DMG_BG="./macos/Packaging/DMG_bg.png"
 FFMPEG_SOURCE="./macos/Runner/Resources/ffmpeg"
+ENTITLEMENTS_PLIST="./macos/Runner/Release.entitlements"
+
+# Flags
+BUILD_DMG=false
+NOTARIZE=false
+NO_CLEAN=false
+WAIT_FOR_NOTARY=false
+STAPLE_AFTER=false
+
+usage() {
+  cat <<EOF
+Usage: $0 [options]
+  --dmg          Build a distributable DMG (implies signing; app still installed locally)
+  --notarize     Submit DMG to Apple Notary Service (implies --dmg, async unless --wait)
+  --wait         Wait for notarization result (implies --notarize)
+  --staple       Staple ticket to DMG after successful notarization (implies --wait)
+  --no-clean     Skip 'flutter clean' for faster iterative builds
+  -h, --help     Show this help
+
+Default behavior (no flags):
+  Build release, sign app, replace /Applications/${APP_BUNDLE_NAME}.
+
+Examples:
+  $0                         # build + install to /Applications
+  $0 --dmg                   # build + install + create DMG
+  $0 --notarize              # build + install + create DMG + submit for notarization
+  $0 --dmg --no-clean        # faster rebuild DMG without cleaning
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  --dmg) BUILD_DMG=true; shift ;;
+  --notarize) NOTARIZE=true; BUILD_DMG=true; shift ;;
+  --wait) WAIT_FOR_NOTARY=true; NOTARIZE=true; BUILD_DMG=true; shift ;;
+  --staple) STAPLE_AFTER=true; WAIT_FOR_NOTARY=true; NOTARIZE=true; BUILD_DMG=true; shift ;;
+    --no-clean) NO_CLEAN=true; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown option: $1"; usage; exit 1 ;;
+  esac
+done
 
 if [[ ! -f "$FFMPEG_SOURCE" ]]; then
   echo "❌ Missing ffmpeg binary at $FFMPEG_SOURCE"
@@ -24,25 +59,108 @@ if [[ ! -f "$FFMPEG_SOURCE" ]]; then
   exit 1
 fi
 
-if [[ "$IS_DEBUG" == false ]]; then
-  echo "🧼 Cleaning build..."
+echo "▶ Building macOS app (Release)"
+if ! $NO_CLEAN; then
   flutter clean
 fi
-
 flutter pub get
-flutter build macos $BUILD_FLAG
+flutter build macos --release
 
-APP_BUNDLE="build/macos/Build/Products/${MODE}/diatonic.app"
-APP_RESOURCES="${APP_BUNDLE}/Contents/Resources"
-
-cp -f "$FFMPEG_SOURCE" "$APP_RESOURCES/"
-chmod +x "$APP_RESOURCES/ffmpeg"
-
-if [[ "$IS_DEBUG" == true ]]; then
-  echo "🧪 Launching Diatonic.app in debug mode..."
-  flutter run -d macos --use-application-binary "$APP_BUNDLE"
-else
-  rm -rf /Applications/Diatonic.app
-  cp -R "$APP_BUNDLE" /Applications/Diatonic.app
-  echo "✅ Diatonic.app (${MODE}) has been built and installed to /Applications."
+if [[ ! -d "$APP_PATH" ]]; then
+  echo "❌ App not found at: $APP_PATH"
+  exit 1
 fi
+
+# --- Codesign helpers ---
+sign_one() {
+  local target="$1"
+  echo "🔏 Signing: $target"
+  if [[ -n "$ENTITLEMENTS_PLIST" && -f "$ENTITLEMENTS_PLIST" ]]; then
+    codesign --force --options runtime --timestamp \
+      --entitlements "$ENTITLEMENTS_PLIST" \
+      --sign "$IDENTITY" "$target"
+  else
+    codesign --force --options runtime --timestamp \
+      --sign "$IDENTITY" "$target"
+  fi
+}
+
+echo "▶ Signing app bundle"
+sign_one "$APP_PATH"
+
+echo "▶ Verifying codesign"
+codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+spctl -a -vv "$APP_PATH" || true
+
+# --- Default install (copy to /Applications) ---
+echo "📦 Installing to /Applications (default step)"
+rm -rf "/Applications/${APP_BUNDLE_NAME}" || true
+cp -R "$APP_PATH" "/Applications/${APP_BUNDLE_NAME}"
+echo "✅ Installed /Applications/${APP_BUNDLE_NAME}"
+
+if $BUILD_DMG; then
+  echo "▶ Creating DMG"
+  command -v create-dmg >/dev/null || { echo "Install with: brew install create-dmg"; exit 1; }
+  rm -f "$DMG_NAME"
+  create-dmg \
+    --volname "${APP_NAME} Installer" \
+    --volicon "$APP_PATH/Contents/Resources/AppIcon.icns" \
+    --background "$DMG_BG" \
+    --window-pos 200 120 \
+    --window-size 600 400 \
+    --icon-size 64 \
+    --icon "$APP_BUNDLE_NAME" 210 230 \
+    --app-drop-link 390 230 \
+    "$DMG_NAME" \
+    "$APP_PATH"
+  echo "✅ Created DMG: $DMG_NAME"
+
+  if $NOTARIZE; then
+    echo "▶ Submitting DMG for notarization${WAIT_FOR_NOTARY:+ (will wait)}"
+    SUBMIT_CMD=(xcrun notarytool submit "$DMG_NAME" --keychain-profile "$NOTARY_PROFILE" --output-format json)
+    SUBMIT_JSON="$(${SUBMIT_CMD[@]})" || { echo "Notary submission failed"; exit 1; }
+    SUBMISSION_ID="$(echo "$SUBMIT_JSON" | /usr/bin/python3 -c 'import sys, json; print(json.load(sys.stdin).get("id",""))')"
+    if [[ -z "$SUBMISSION_ID" ]]; then
+      echo "❌ Could not parse submission ID."; exit 1
+    fi
+    echo "🚀 Submitted to Notary Service. Submission ID: $SUBMISSION_ID"
+
+    if $WAIT_FOR_NOTARY; then
+      echo "⏳ Waiting for notarization result..."
+      # Poll until status != In Progress
+      while true; do
+        INFO_JSON="$(xcrun notarytool info "$SUBMISSION_ID" --keychain-profile "$NOTARY_PROFILE" --output-format json || true)"
+        STATUS="$(echo "$INFO_JSON" | /usr/bin/python3 -c 'import sys, json;\nimport json as j;\nimport sys;\n\ntry:\n d=j.load(sys.stdin)\n print(d.get("status",""))\nexcept Exception:\n print("")')"
+        if [[ "$STATUS" == "" ]]; then
+          echo "❌ Failed to retrieve status."; exit 1
+        fi
+        echo "   Status: $STATUS"
+        if [[ "$STATUS" == "Accepted" ]]; then
+          echo "✅ Notarization accepted"
+          if $STAPLE_AFTER; then
+            echo "🔗 Stapling ticket to DMG"
+            xcrun stapler staple "$DMG_NAME"
+            echo "🧪 Validating staple"
+            xcrun stapler validate "$DMG_NAME" || { echo "Staple validation failed"; exit 1; }
+            echo "✅ Stapled and validated"
+          fi
+          break
+        elif [[ "$STATUS" == "Rejected" ]]; then
+          echo "❌ Notarization rejected"
+          echo "$INFO_JSON" > notarization_failure.json
+          echo "Details saved to notarization_failure.json"
+          exit 1
+        else
+          sleep 15
+        fi
+      done
+    else
+      echo "ℹ️  Check status later: xcrun notarytool info $SUBMISSION_ID --keychain-profile $NOTARY_PROFILE"
+      echo "ℹ️  After acceptance: xcrun stapler staple \"$DMG_NAME\" && xcrun stapler validate \"$DMG_NAME\""
+    fi
+  fi
+fi
+
+echo "🏁 Done." 
+
+

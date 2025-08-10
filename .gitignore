@@ -18,6 +18,11 @@ migrate_working_dir/
 *.iws
 .idea/
 
+# FFMPEG Related
+ffmpeg-*/
+**/ffmpeg-*
+**/build_ffmpeg
+
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
@@ -79,6 +84,7 @@ app.*.map.json
 **/macos/Flutter/GeneratedPluginRegistrant.swift
 **/macos/Flutter/ephemeral/
 **/macos/xcuserdata/
+**/macos/Packaging/*.dmg
 
 # Linux related
 **/linux/flutter/generated_plugin_registrant.cc
