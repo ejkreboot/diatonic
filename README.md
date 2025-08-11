@@ -20,7 +20,7 @@ Built using [Flutter](https://flutter.dev). Flutter is cross platform, and thus 
 
 ## 🖥️ Screenshot
 
-<img src="./landing_page/diatonic-wide.png" alt="Diatonic Screen Shot" width="500">
+<img src="diatonic-wide.png" alt="Diatonic Screen Shot" width="500">
 
 ---
 
