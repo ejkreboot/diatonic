@@ -98,6 +98,11 @@
   .band .frame { width: min(1200px, 96vw); margin: 46px auto; border: 1px solid var(--stroke); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
     .band img { width: 100%; display:block; }
 
+  /* Demo video */
+  .video-card { background: linear-gradient(145deg,var(--panel),var(--panel-2)); border:1px solid var(--stroke); border-radius: calc(var(--radius) + 2px); overflow: hidden; box-shadow: var(--shadow); }
+  .video-media { position: relative; aspect-ratio: 16 / 9; background: #000; }
+  .video-media video { width: 100%; height: 100%; display: block; }
+
     .steps { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
     @media (max-width: 900px) { .steps { grid-template-columns: 1fr; } }
   .step { padding: 22px 20px 24px; border:1px solid var(--stroke); border-radius: var(--radius); background: var(--panel); position:relative; overflow:hidden; }
@@ -155,10 +160,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z"/></svg>
           <span>Github Repo</span>
         </a> 
-        <!-- <a class="btn" href="#demo" role="button">
+        <a class="btn" href="#demo" role="button">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z"/></svg>
           <span>Watch demo</span>
-        </a> -->
+        </a>
       </div>
       <div class="hero-card">
         <div class="hero-media">
@@ -196,6 +201,23 @@
         <img src="images/diatonic-wide.png" alt="Full-width view of Diatonic with large piano and controls" />
       </div>
     </section>
+
+    <section class="section container center" id="demo">
+      <h2>Watch the demo</h2>
+      <div class="video-card">
+        <div class="video-media">
+          <video controls controlsList="nodownload noremoteplayback" preload="metadata" playsinline poster="images/diatonic-hero.png">
+            <source src="assets/demo.mp4" type="video/mp4" />
+            Your browser does not support embedded video. You can
+            <a href="assets/demo.mp4">download the demo</a> instead.
+          </video>
+        </div>
+        <p class="caption">Short overview of Diatonic features and workflow.</p>
+      </div>
+      <div class="cta" style="margin-top:14px;">
+  <a class="btn" href="assets/demo.mp4" download>Download demo video (MP4)</a>
+      </div>
+    </section>  
 
     <section class="section container center" id="support">
       <h2>Support development</h2>
