@@ -24,7 +24,7 @@ set -euo pipefail
 
 APP_NAME="${APP_NAME:-Diatonic}"
 APP_BUNDLE_NAME="${APP_NAME}.app"
-IDENTITY="${IDENTITY:-Developer ID Application: Eric Kort (UU9J7A9VZ2)}"
+IDENTITY="${IDENTITY:-}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-MyNotaryProfile}"
 BUILD_DIR="./build/macos/Build/Products/Release"
 APP_PATH="${BUILD_DIR}/${APP_BUNDLE_NAME}"
@@ -44,7 +44,11 @@ Commands:
   notarize                   Submit DMG for notarization (async only)
   staple                     Staple notarization ticket to DMG & validate
 
+Options (global env / flags):
+  --identity "Developer ID Application: Your Name (XX9X9X9XX9)"  (alt to exporting IDENTITY)
+
 Examples:
+  export IDENTITY="Developer ID Application: Your Name (XX9X9X9XX9)"
   $0 build --no-clean
   $0 codesign
   $0 diskimage
@@ -59,6 +63,21 @@ EOF
 
 log() { printf '%s\n' "$*"; }
 err() { printf '❌ %s\n' "$*" >&2; exit 1; }
+
+require_identity() {
+  if [[ -z "${IDENTITY:-}" ]]; then
+    cat <<'EOF'
+❌ No signing identity (IDENTITY) set.
+
+Set it before running signing-related commands, e.g.:
+  export IDENTITY="Developer ID Application: Eric Kort (UU9J7A9VZ2)"
+
+List available identities:
+  security find-identity -p codesigning -v
+EOF
+    exit 1
+  fi
+}
 
 require_tool() { command -v "$1" >/dev/null || err "Missing required tool: $1"; }
 
@@ -151,6 +170,7 @@ cmd_build() {
 
 cmd_codesign() {
   [[ -d "$APP_PATH" ]] || err "App bundle missing; run: $0 build"
+  require_identity
   deep_sign_internals "$APP_PATH"
   sign_one "$APP_PATH"
   log "🔎 Verifying signature"
@@ -187,6 +207,7 @@ cmd_notarize() {
   [[ -f "$DMG_NAME" ]] || err "DMG missing; run: $0 diskimage"
   require_tool xcrun
   
+  require_identity
   log "🖊  Signing DMG: $DMG_NAME"
   # Sign DMG with Developer ID Application (no entitlements / no HR)
   if ! codesign --force --timestamp --sign "$IDENTITY" "$DMG_NAME"; then
@@ -220,6 +241,21 @@ cmd_staple() {
 }
 
 main() {
+  local extra_identity=""
+  # Pre-scan for a --identity flag before subcommand (optional order)
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --identity)
+        extra_identity="$2"; shift 2 ;;
+      build|codesign|diskimage|notarize|staple|help|-h|--help)
+        break ;;
+      *) break ;;
+    esac
+  done
+  if [[ -n "$extra_identity" ]]; then
+    IDENTITY="$extra_identity"
+  fi
+
   local cmd="${1:-}"; shift || true
   case "$cmd" in
     build)      cmd_build "$@" ;;

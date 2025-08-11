@@ -17,6 +17,7 @@ SIGN=false
 VERIFY=false
 SINGLE_ARCH=""
 MACOSX_MIN="11.0"
+IDENTITY="${IDENTITY:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,8 +27,25 @@ while [[ $# -gt 0 ]]; do
       SINGLE_ARCH="$2"; shift 2 ;;
     --min-version)
       MACOSX_MIN="$2"; shift 2 ;;
+    --identity)
+      IDENTITY="$2"; shift 2 ;;
     -h|--help)
-  echo "Usage: $0 [--sign] [--verify] [--arch arm64|x86_64] [--min-version 11.0]"; exit 0 ;;
+      cat <<USAGE
+Usage: $0 [options]
+  --sign                 Codesign resulting ffmpeg (requires --identity or IDENTITY env)
+  --verify               Execute ffmpeg -version to validate slices
+  --arch <arm64|x86_64>  Single-arch build (skip universal lipo)
+  --min-version <ver>    Set MACOSX_DEPLOYMENT_TARGET (default 11.0)
+  --identity "Developer ID Application: Your Name (XX9X9X9XX9)"  Override signing identity
+
+Environment:
+  IDENTITY  Developer ID Application identity if --sign used
+
+Examples:
+  IDENTITY="Developer ID Application: Your Name (XX9X9X9XX9)" $0 --sign --verify
+  $0 --arch arm64 --verify
+USAGE
+      exit 0 ;;
     *) echo "Unknown arg: $1"; exit 1 ;;
   esac
 done
@@ -108,10 +126,26 @@ else
   FINAL_BIN="$OUTPUT_DIR/$SINGLE_ARCH/bin/ffmpeg"
 fi
 
-if [[ "$SIGN" ]]; then
-  echo "🔏 Code signing"
+require_identity() {
+  if [[ -z "${IDENTITY:-}" ]]; then
+    cat <<'EOF'
+❌ No signing identity set (IDENTITY env var not defined).
+
+Set your codesigning identity first, for example:
+  export IDENTITY="Developer ID Application: Your Name (XX9X9X9XX9)"
+
+List available identities:
+  security find-identity -p codesigning -v
+EOF
+    exit 1
+  fi
+}
+
+if [[ "$SIGN" == true ]]; then
+  require_identity
+  echo "🔏 Code signing with IDENTITY: $IDENTITY"
   codesign --force --options runtime --timestamp \
-    --sign "Developer ID Application: Eric Kort (UU9J7A9VZ2)" \
+    --sign "$IDENTITY" \
     "$FINAL_BIN"
 fi
 
