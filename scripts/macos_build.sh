@@ -14,17 +14,20 @@ FFMPEG_SOURCE="./macos/Runner/Resources/ffmpeg"
 ENTITLEMENTS_PLIST="./macos/Runner/Release.entitlements"
 
 # Flags
+BUILD = true
 BUILD_DMG=false
 NOTARIZE=false
 NO_CLEAN=false
 WAIT_FOR_NOTARY=false
 STAPLE_AFTER=false
+NOTARIZE_EXISTING=false
 
 usage() {
   cat <<EOF
 Usage: $0 [options]
   --dmg          Build a distributable DMG (implies signing; app still installed locally)
   --notarize     Submit DMG to Apple Notary Service (implies --dmg, async unless --wait)
+  --notarize-existing  Notarize existing DMG ${DMG_NAME} (skips build & DMG creation)
   --wait         Wait for notarization result (implies --notarize)
   --staple       Staple ticket to DMG after successful notarization (implies --wait)
   --no-clean     Skip 'flutter clean' for faster iterative builds
@@ -43,20 +46,43 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-  --dmg) BUILD_DMG=true; shift ;;
-  --notarize) NOTARIZE=true; BUILD_DMG=true; shift ;;
-  --wait) WAIT_FOR_NOTARY=true; NOTARIZE=true; BUILD_DMG=true; shift ;;
-  --staple) STAPLE_AFTER=true; WAIT_FOR_NOTARY=true; NOTARIZE=true; BUILD_DMG=true; shift ;;
+    --dmg) BUILD_DMG=true; shift ;;
+    --notarize) NOTARIZE=true; BUILD_DMG=true; shift ;;
+    --notarize-existing) NOTARIZE=true; NOTARIZE_EXISTING=true; shift ;;
+    --wait) WAIT_FOR_NOTARY=true; NOTARIZE=true; BUILD_DMG=true; shift ;;
+    --staple) STAPLE_AFTER=true; WAIT_FOR_NOTARY=true; NOTARIZE=true; BUILD_DMG=true; shift ;;
     --no-clean) NO_CLEAN=true; shift ;;
+    --no-build) BUILD=false; NO_CLEAN=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
 done
 
-if [[ ! -f "$FFMPEG_SOURCE" ]]; then
-  echo "❌ Missing ffmpeg binary at $FFMPEG_SOURCE"
-  echo "👉 Please run ./scripts/macos_configure.sh to build and install ffmpeg first."
-  exit 1
+if ! $NOTARIZE_EXISTING; then
+  if [[ ! -f "$FFMPEG_SOURCE" ]]; then
+    echo "❌ Missing ffmpeg binary at $FFMPEG_SOURCE"
+    echo "👉 Please run ./scripts/macos_configure.sh to build and install ffmpeg first."
+    exit 1
+  fi
+fi
+
+# Reusable notarization routine
+notarize_dmg() {
+  local dmg_path="$1"
+  if [[ ! -f "$dmg_path" ]]; then
+    echo "❌ DMG not found: $dmg_path"; exit 1; fi
+  echo "▶ Submitting DMG for notarization${WAIT_FOR_NOTARY:+ (will wait)}"
+  xcrun notarytool submit "$dmg_path" --keychain-profile "$NOTARY_PROFILE" --output-format normal)
+  echo "ℹ️  Check status later: xcrun notarytool info SUBMISSION_ID --keychain-profile $NOTARY_PROFILE"
+  echo "ℹ️  After acceptance: xcrun stapler staple \"$dmg_path\" && xcrun stapler validate \"$dmg_path\""
+  fi
+}
+
+if $NOTARIZE_EXISTING; then
+  echo "ℹ️  Notarizing existing DMG (skipping build & DMG creation)"
+  notarize_dmg "$DMG_NAME"
+  echo "🏁 Done."
+  exit 0
 fi
 
 echo "▶ Building macOS app (Release)"
@@ -72,7 +98,7 @@ if [[ ! -d "$APP_PATH" ]]; then
 fi
 
 # --- Codesign helpers ---
-sign_one() {
+sign() {
   local target="$1"
   echo "🔏 Signing: $target"
   if [[ -n "$ENTITLEMENTS_PLIST" && -f "$ENTITLEMENTS_PLIST" ]]; then
@@ -86,10 +112,9 @@ sign_one() {
 }
 
 echo "▶ Signing app bundle"
-sign_one "$APP_PATH"
-
-echo "▶ Verifying codesign"
-codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+sign "$APP_PATH"
+echo "▶ Verifying signature"
+codesign --verify --deep --strict --verbose=2 "$APP_PATH" || { echo "❌ Deep verify failed"; exit 1; }
 spctl -a -vv "$APP_PATH" || true
 
 # --- Default install (copy to /Applications) ---
@@ -116,51 +141,10 @@ if $BUILD_DMG; then
   echo "✅ Created DMG: $DMG_NAME"
 
   if $NOTARIZE; then
-    echo "▶ Submitting DMG for notarization${WAIT_FOR_NOTARY:+ (will wait)}"
-    SUBMIT_CMD=(xcrun notarytool submit "$DMG_NAME" --keychain-profile "$NOTARY_PROFILE" --output-format json)
-    SUBMIT_JSON="$(${SUBMIT_CMD[@]})" || { echo "Notary submission failed"; exit 1; }
-    SUBMISSION_ID="$(echo "$SUBMIT_JSON" | /usr/bin/python3 -c 'import sys, json; print(json.load(sys.stdin).get("id",""))')"
-    if [[ -z "$SUBMISSION_ID" ]]; then
-      echo "❌ Could not parse submission ID."; exit 1
-    fi
-    echo "🚀 Submitted to Notary Service. Submission ID: $SUBMISSION_ID"
-
-    if $WAIT_FOR_NOTARY; then
-      echo "⏳ Waiting for notarization result..."
-      # Poll until status != In Progress
-      while true; do
-        INFO_JSON="$(xcrun notarytool info "$SUBMISSION_ID" --keychain-profile "$NOTARY_PROFILE" --output-format json || true)"
-        STATUS="$(echo "$INFO_JSON" | /usr/bin/python3 -c 'import sys, json;\nimport json as j;\nimport sys;\n\ntry:\n d=j.load(sys.stdin)\n print(d.get("status",""))\nexcept Exception:\n print("")')"
-        if [[ "$STATUS" == "" ]]; then
-          echo "❌ Failed to retrieve status."; exit 1
-        fi
-        echo "   Status: $STATUS"
-        if [[ "$STATUS" == "Accepted" ]]; then
-          echo "✅ Notarization accepted"
-          if $STAPLE_AFTER; then
-            echo "🔗 Stapling ticket to DMG"
-            xcrun stapler staple "$DMG_NAME"
-            echo "🧪 Validating staple"
-            xcrun stapler validate "$DMG_NAME" || { echo "Staple validation failed"; exit 1; }
-            echo "✅ Stapled and validated"
-          fi
-          break
-        elif [[ "$STATUS" == "Rejected" ]]; then
-          echo "❌ Notarization rejected"
-          echo "$INFO_JSON" > notarization_failure.json
-          echo "Details saved to notarization_failure.json"
-          exit 1
-        else
-          sleep 15
-        fi
-      done
-    else
-      echo "ℹ️  Check status later: xcrun notarytool info $SUBMISSION_ID --keychain-profile $NOTARY_PROFILE"
-      echo "ℹ️  After acceptance: xcrun stapler staple \"$DMG_NAME\" && xcrun stapler validate \"$DMG_NAME\""
-    fi
+    sign "$DMG_NAME"
+    notarize_dmg "$DMG_NAME"
   fi
 fi
 
 echo "🏁 Done." 
-
 

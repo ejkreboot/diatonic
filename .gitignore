@@ -11,6 +11,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+.last* 
 
 # IntelliJ related
 *.iml
@@ -85,6 +86,7 @@ app.*.map.json
 **/macos/Flutter/ephemeral/
 **/macos/xcuserdata/
 **/macos/Packaging/*.dmg
+**/dmg_stage
 
 # Linux related
 **/linux/flutter/generated_plugin_registrant.cc

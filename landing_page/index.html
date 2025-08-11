@@ -11,25 +11,37 @@
   <meta property="og:image" content="images/og-diatonic.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f5f5f7;
+      /* Refined neutral palette with warm brass accent */
+      --bg: #f6f6f5;
+      --bg-alt: #ececea;
       --panel: #ffffff;
-      --panel-2: #f9f9fa;
-      --text: #1d1d1f;
-      --muted: #6e6e73;
-      --accent: #ff8a1d;
-      --accent-2: #b94e00;
-      --stroke: #d2d2d7;
-      --radius: 14px;
-      --shadow: 0 4px 14px rgba(0,0,0,.08);
+      --panel-2: #f3f3f2;
+      --text: #1c1c1b;
+      --text-soft: #2e2e2c;
+      --muted: #6b6b67;
+      --accent: #c7a25a; /* brass / aged gold */
+      --accent-hover: #b99345;
+      --accent-soft: #e7d4ad;
+      --stroke: #d8d7d4;
+      --radius: 16px;
+      --shadow: 0 2px 6px -1px rgba(0,0,0,.06), 0 8px 24px -6px rgba(0,0,0,.08);
+      --font-sans: -apple-system,BlinkMacSystemFont,'Helvetica Neue','Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-serif: 'Fraunces','Georgia','Times New Roman',ui-serif,serif;
+      --tracking-tight: -0.015em;
+      --tracking-wide: 0.05em;
+      --gradient-keys: repeating-linear-gradient(90deg,#000 0 6px,#111 6px 12px);
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
+      font-family: var(--font-sans);
+      background: radial-gradient(circle at 30% 20%, var(--panel) 0%, var(--bg) 55%, var(--bg-alt) 100%);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -37,51 +49,79 @@
     a { color: inherit; text-decoration: none; }
     .container { width: min(1100px, 92vw); margin: 0 auto; }
 
-    header {
-      position: sticky; top: 0; z-index: 50;
-      backdrop-filter: saturate(180%) blur(14px);
-      background: rgba(255,255,255,0.8);
-      border-bottom: 1px solid var(--stroke);
-    }
+  header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(18px) saturate(160%); background: rgba(255,255,255,0.72); border-bottom: 1px solid var(--stroke); }
     .nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
-    .brand { display:flex; gap:.6rem; align-items:center; font-weight:700; }
-    .brand-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
-    .nav a { color: var(--muted); margin-left: 18px; font-size: 14px; }
+  .brand { display:flex; gap:.55rem; align-items:center; font-weight:600; letter-spacing: var(--tracking-tight); font-family: var(--font-serif); font-size: 18px; }
+  .brand-dot { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(145deg,var(--accent),var(--accent-hover)); box-shadow: 0 0 0 2px #fff,0 0 0 3px var(--accent-soft); }
+  .nav a { color: var(--muted); margin-left: 22px; font-size: 14px; position:relative; padding:4px 0; }
+  .nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius:4px; }
+  .nav a::after { content:""; position:absolute; left:0; bottom:0; height:1px; width:0; background: var(--accent); transition: width .25s ease; }
+  .nav a:hover::after, .nav a:focus-visible::after { width:100%; }
     .nav a:hover { color: var(--text); }
 
-    .hero { padding: clamp(48px, 8vw, 96px) 0 24px; text-align: center; }
-    .title { font-size: clamp(36px, 5vw, 56px); margin: 0 0 12px; font-weight: 800; }
-    .subtitle { color: var(--muted); font-size: clamp(16px, 2.3vw, 20px); margin: 0 auto 28px; width: min(720px, 92%); }
+  .hero { padding: clamp(54px, 9vw, 108px) 0 28px; text-align: center; }
+  .title { font-size: clamp(38px, 5.2vw, 60px); margin: 0 0 14px; font-weight: 450; font-family: var(--font-serif); letter-spacing: -0.025em; line-height: 1.04; font-variation-settings: 'opsz' 96, 'wght' 450; }
+  .title em { font-style: normal; background: linear-gradient(100deg,var(--accent),var(--accent-hover)); -webkit-background-clip: text; background-clip: text; color: transparent; position:relative; }
+  .title em::after { content:""; position:absolute; left:2px; right:2px; bottom:-6px; height:2px; background: linear-gradient(90deg,var(--accent) 0,var(--accent-hover) 70%,transparent 100%); opacity:.65; }
+  .subtitle { color: var(--muted); font-size: clamp(17px, 2.1vw, 21px); margin: 0 auto 32px; width: min(720px, 90%); font-weight: 400; line-height:1.45; }
 
-    .cta { display:flex; gap:14px; justify-content:center; flex-wrap: wrap; }
-    .btn { display:inline-flex; align-items:center; gap:10px; padding:14px 18px; border-radius: 12px; border: 1px solid var(--stroke); background: var(--panel); color: var(--text); box-shadow: var(--shadow); transition: transform .08s ease; }
-    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
-    .btn:hover { transform: translateY(-1px); }
+  .cta { display:flex; gap:16px; justify-content:center; flex-wrap: wrap; }
+  .btn { --btn-bg: var(--panel); position:relative; display:inline-flex; align-items:center; gap:10px; padding:14px 22px 15px; border-radius: 14px; border: 1px solid var(--stroke); background: var(--btn-bg); color: var(--text-soft); font-weight:500; letter-spacing:.01em; box-shadow: var(--shadow); transition: transform .18s cubic-bezier(.4,.14,.3,1), border-color .25s; }
+  .btn.primary { --btn-bg: linear-gradient(140deg,var(--accent) 0%,var(--accent-hover) 90%); border-color: var(--accent-hover); color:#fff; font-weight:600; }
+  .btn.primary:hover { filter: brightness(1.03); }
+  .btn:hover { transform: translateY(-3px); border-color: var(--accent-soft); }
+  .btn:active { transform: translateY(-1px); }
+  .btn:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .btn .hint { font-size:11px; opacity:.8; font-weight:400; }
 
-    .hero-card { margin-top: 28px; background: var(--panel); border:1px solid var(--stroke); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  .hero-card { margin-top: 34px; background: linear-gradient(145deg,var(--panel),var(--panel-2)); border:1px solid var(--stroke); border-radius: calc(var(--radius) + 2px); overflow: hidden; box-shadow: var(--shadow); }
     .hero-media img { width: 100%; display:block; }
-    .caption { color: var(--muted); font-size: 13px; text-align:center; padding: 10px 14px 16px; }
+  .caption { color: var(--muted); font-size: 13px; text-align:center; padding: 12px 16px 18px; letter-spacing:.02em; }
 
-    .section { padding: clamp(40px, 8vw, 80px) 0; }
-    .section h2 { font-size: clamp(24px, 3.6vw, 34px); margin: 0 0 22px; text-align:center; }
+  .section { padding: clamp(46px, 8.5vw, 88px) 0; }
+  .section h2 { font-family: var(--font-serif); font-weight:500; font-size: clamp(26px, 3.4vw, 38px); margin: 0 0 28px; text-align:center; letter-spacing:-0.018em; position:relative; font-variation-settings: 'opsz' 72, 'wght' 500; }
+  .section h2::after { content:""; display:block; margin:14px auto 0; width:80px; height:2px; background: linear-gradient(90deg,var(--accent),var(--accent-hover)); border-radius:2px; opacity:.55; }
     .grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-    .card { background: var(--panel); border:1px solid var(--stroke); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
-    .kicker { color: var(--accent-2); font-weight:700; text-transform: uppercase; font-size: 12px; margin-bottom: 6px; display:block; }
-    .card h3 { margin: 0 0 8px; font-size: 20px; }
-    .card p { margin: 0; color: var(--muted); }
+  .card { background: var(--panel); border:1px solid var(--stroke); border-radius: var(--radius); padding: 24px 22px 26px; box-shadow: var(--shadow); position:relative; overflow:hidden; transition: border-color .25s, transform .25s; }
+  .card::before { content:""; position:absolute; inset:0; background:linear-gradient(140deg,var(--accent-soft) 0%,transparent 60%); opacity:0; transition: opacity .4s; pointer-events:none; }
+  .card:hover { border-color: var(--accent-soft); transform: translateY(-4px); }
+  .card:hover::before { opacity:.4; }
+  .kicker { color: var(--accent-hover); font-weight:600; letter-spacing: var(--tracking-wide); font-size: 11px; margin-bottom: 8px; display:block; text-transform:uppercase; }
+  .card h3 { margin: 0 0 10px; font-size: 21px; font-weight:600; letter-spacing:-0.01em; }
+  .card p { margin: 0; color: var(--muted); line-height:1.48; }
 
-    .band { background: var(--panel-2); border-top:1px solid var(--stroke); border-bottom:1px solid var(--stroke); padding: 0; }
-    .band .frame { width: min(1200px, 96vw); margin: 40px auto; border: 1px solid var(--stroke); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
+  .band { background: linear-gradient(180deg,var(--panel-2),var(--panel)); border-top:1px solid var(--stroke); border-bottom:1px solid var(--stroke); padding: 0; }
+  .band .frame { width: min(1200px, 96vw); margin: 46px auto; border: 1px solid var(--stroke); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
     .band img { width: 100%; display:block; }
 
     .steps { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
     @media (max-width: 900px) { .steps { grid-template-columns: 1fr; } }
-    .step { padding: 18px; border:1px solid var(--stroke); border-radius: var(--radius); background: var(--panel); }
-    .step .num { width: 34px; height: 34px; border-radius: 10px; display:inline-grid; place-items:center; font-weight:800; background: var(--accent); color:#fff; margin-bottom: 10px; }
+  .step { padding: 22px 20px 24px; border:1px solid var(--stroke); border-radius: var(--radius); background: var(--panel); position:relative; overflow:hidden; }
+  .step .num { width: 38px; height: 38px; border-radius: 12px; display:inline-grid; place-items:center; font-weight:600; font-feature-settings: 'tnum' 1; background: linear-gradient(145deg,var(--accent),var(--accent-hover)); color:#fff; margin-bottom: 12px; box-shadow: 0 6px 14px -6px rgba(0,0,0,.25); }
 
-    footer { padding: 36px 0; border-top:1px solid var(--stroke); color: var(--muted); font-size: 14px; }
+    footer { padding: 44px 0 46px; border-top:1px solid var(--stroke); color: var(--muted); font-size: 13.5px; background: linear-gradient(180deg,var(--panel),var(--bg)); }
     footer .row { display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 12px; }
+    footer a { color: var(--muted); font-size:13px; position:relative; padding:3px 0; }
+    footer a::after { content:""; position:absolute; left:0; bottom:0; width:0; height:1px; background: var(--accent); transition: width .25s; }
+    footer a:hover::after { width:100%; }
+
+    .center { text-align:center; }
+    .muted { color: var(--muted); }
+
+    /* Support / donate */
+    .support-note { margin-top: 10px; color: var(--muted); font-size: 13.5px; }
+    .btn.donate { 
+      --btn-bg: var(--panel);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    .btn.donate:hover { border-color: var(--accent-hover); transform: translateY(-3px); }
+    .btn .icon { display:inline-block; line-height:0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn, .card, .nav a::after { transition: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -101,7 +141,7 @@
 
   <main>
     <section class="hero container" id="home">
-      <h1 class="title">Your Desktop Piano and Time Warping Media Player</h1>
+  <h1 class="title">A Desktop Piano & Time‑Warping Media Player</h1>
       <p class="subtitle">Theory-aware keyboard and audio player for composition and transcription.</p>
       <div class="cta" id="download">
         <a class="btn primary" href="./assets/Diatonic.app/" role="button">
@@ -182,6 +222,23 @@
         <a class="btn" href="#demo">Watch demo</a>
       </div>
     </section>
+    <section class="section container center" id="support">
+      <h2>Support development</h2>
+      <p class="subtitle">Diatonic is free. If it helps you, you can fuel future updates in one click.</p>
+      <div class="cta">
+        <a class="btn donate" href="https://www.buymeacoffee.com/YOUR_HANDLE" target="_blank" rel="noopener">
+          <span class="icon" aria-hidden="true">
+            <!-- simple coffee cup -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 7h13v5a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V7zm13 0h3a2 2 0 1 1 0 4h-3V7zM5 19h12v2H5z"/>
+            </svg>
+          </span>
+          <span>Buy me a coffee</span>
+        </a>
+      </div>
+      <p class="support-note">No paywalls, no ads — just optional support. Thank you.</p>
+    </section>
+
   </main>
 
   <footer>
