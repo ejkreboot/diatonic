@@ -1,6 +1,6 @@
 # Diatonic
 
-**Diatonic* is a simple piano 
+**Diatonic** is a simple piano 
 keyboard for when you want to quickly play some notes put aren't near a piano. It is intended as a 
 support tool for composition and transcription. It also includes a media player with 
 time warping to assist with learning and transcribing music, or playing back tracks.
@@ -14,7 +14,7 @@ Built using [Flutter](https://flutter.dev). Flutter is cross platform, and thus 
 - **Real piano note samples**
 - **Play desired intervals and chords** by just playing the root note.
 - **Mouse or Keyboard control**
-- Integrated media player with time warping
+- **Integrated media player** with time warping
 
 ---
 
