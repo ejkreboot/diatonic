@@ -14,7 +14,6 @@
   <link rel="icon" href="favicon.ico" />
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Try Bodoni Moda: high-contrast modern serif with good elegance & readability -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">  
 <style>
     :root {
@@ -130,6 +129,18 @@
     @media (prefers-reduced-motion: reduce) {
       .btn, .card, .nav a::after { transition: none !important; }
     }
+
+  /* Contact form */
+  .form { width: min(760px, 96%); margin: 0 auto; text-align:left; }
+  .form .row { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .form .row { grid-template-columns: 1fr; } }
+  .field { margin-bottom: 14px; }
+  .label { display:block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .input, .textarea { width: 100%; padding: 12px 12px; border-radius: 10px; border: 1px solid var(--stroke); background: var(--panel); color: var(--text); box-shadow: inset 0 1px 0 rgba(0,0,0,.02); }
+  .textarea { min-height: 140px; resize: vertical; }
+  .help { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .status { margin-top: 10px; font-size: 13px; }
+  .hide { display:none !important; }
   </style>
 </head>
 <body>
@@ -141,7 +152,7 @@
       </a>
       <nav>
         <a href="#features">Features</a>
-        <a href="#support">Donate</a>
+        <a href="#donate">Donate</a>
       </nav>
     </div>
   </header>
@@ -219,7 +230,7 @@
       </div>
     </section>  
 
-    <section class="section container center" id="support">
+    <section class="section container center" id="donate">
       <h2>Support development</h2>
       <p class="subtitle">Diatonic is free. If it helps you, you can fuel future updates in one click.</p>
       <div class="cta">
@@ -236,12 +247,41 @@
       <p class="support-note">No paywalls, no ads — just optional support. Thank you.</p>
     </section>
 
+    <section class="section container" id="contact">
+      <h2 class="center">Questions or feedback</h2>
+      <p class="subtitle center" style="margin-bottom:24px">Send a note here, or open an issue on <a href="https://github.com/ejkreboot/diatonic/issues" target="_blank" rel="noopener">GitHub</a> if you prefer.</p>
+        <form class="form" action="https://api.diatonic.org/api/create-issue" method="POST" accept-charset="UTF-8">
+        <div class="row">
+          <div class="field">
+            <label class="label" for="name">Name <span class="muted">(optional)</span></label>
+            <input class="input" id="name" name="name" type="text" autocomplete="name" />
+          </div>
+          <div class="field">
+            <label class="label" for="email">Email <span class="muted">(optional)</span></label>
+            <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="email" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="message">Message</label>
+          <textarea class="textarea" id="message" name="message" required></textarea>
+          <div class="help">Please include any details that could help.</div>
+        </div>
+        <!-- Honeypot -->
+        <div class="hide"><label>Leave empty<input type="text" name="hp" tabindex="-1" autocomplete="off" /></label></div>
+        <div class="cta">
+          <button class="btn primary" type="submit" id="sendBtn">Send message</button>
+          <a class="btn" href="https://github.com/ejkreboot/diatonic/issues/new/choose" target="_blank" rel="noopener">Open a GitHub issue</a>
+        </div>
+        <div class="status" id="formStatus" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
   </main>
 
   <footer>
     <div class="container row">
       <nav>
-        <a href="#support">Support</a>
+        <a href="#donate">Donate</a>
       </nav>
       <div>© <span id="y"></span> Diatonic. All rights reserved.</div>
     </div>
@@ -260,6 +300,18 @@
         }
       });
     });
+    // Contact form handler and ?contact_status=thanks logic
+    (function(){
+      var status = document.getElementById('formStatus');
+      if (!status) return;
+      var url = new URL(window.location.href);
+      if (url.searchParams.get('contact_status') === 'thanks') {
+        status.textContent = 'Thanks! Your message has been received.';
+        url.searchParams.delete('contact_status');
+        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+      }
+    })();
+
   </script>
 </body>
 </html>
