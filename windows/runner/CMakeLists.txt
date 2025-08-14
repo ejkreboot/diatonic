@@ -36,5 +36,14 @@ target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
+# Post-build: copy ffmpeg.exe next to the built app
+set(FFMPEG_SRC "${CMAKE_CURRENT_SOURCE_DIR}/Resources/ffmpeg.exe")
+set(APP_DIR "$<TARGET_FILE_DIR:${BINARY_NAME}>")
+
+add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${FFMPEG_SRC}" "${APP_DIR}/ffmpeg.exe"
+)
+
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)

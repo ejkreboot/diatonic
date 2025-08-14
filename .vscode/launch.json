@@ -19,5 +19,12 @@
       "type": "dart",
       "deviceId": "android"
     }
+    ,
+    {
+      "name": "diatonic (Flutter Windows)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "windows"
+    }
   ]
 }

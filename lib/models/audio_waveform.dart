@@ -131,11 +131,16 @@ class AudioWaveform {
 
   String _getBundledFfmpegPath() {
     final executableDir = File(Platform.resolvedExecutable).parent.parent;
+    final isWindows = Platform.isWindows;
     final candidates = [
-      p.join(executableDir.path, 'Resources', 'ffmpeg'),              // current location
-      p.join(executableDir.path, 'MacOS', 'ffmpeg'),                  // if moved beside main executable
-      p.join(executableDir.path, 'MacOS', 'ffmpeg-helper'),           // optional renamed helper
+      p.join(executableDir.path, 'Resources', isWindows ? 'ffmpeg.exe' : 'ffmpeg'),              // current location
+      p.join(executableDir.path, 'MacOS', isWindows ? 'ffmpeg.exe' : 'ffmpeg'),                  // if moved beside main executable
+      p.join(executableDir.path, 'MacOS', isWindows ? 'ffmpeg-helper.exe' : 'ffmpeg-helper'),    // optional renamed helper
     ];
+    if (isWindows) {
+      candidates.insert(0, p.join('.', 'build', 'windows', 'x64', 'runner', 'Debug', 'ffmpeg.exe'));
+      candidates.insert(1, p.join('.', 'build', 'windows', 'x64', 'runner', 'Release', 'ffmpeg.exe'));
+    }
 
     for (final c in candidates) {
       final f = File(c);

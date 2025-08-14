@@ -59,7 +59,7 @@ class _HomeShellState extends State<_HomeShell> {
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       if (targetShow) {
         // Expand window first to avoid overflow during expand animation
-        setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 920));
+        setWindowFrame(const Rect.fromLTWH(100, 100, 1200, 924));
         setState(() => _showAudioPlayer = true);
       } else {
         // Start collapse animation first; shrink window after animation ends
