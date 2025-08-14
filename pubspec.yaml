@@ -35,3 +35,13 @@ flutter_launcher_icons:
   ios: true
   remove_alpha_ios: true
     
+msix_config:
+  display_name: Diatonic
+  identity_name: org.diatonic.diatonic
+  publisher_display_name: Eric Kort
+  # Must match your cert Subject (adjust to your cert):
+  publisher: "CN=Eric Kort, O=Your Org, C=US"
+  msix_version: 1.0.0.0
+  logo_path: windows/runner/resources/app_icon.ico
+  capabilities:
+    - internetClient

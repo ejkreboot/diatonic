@@ -133,23 +133,28 @@ class AudioWaveform {
     final executableDir = File(Platform.resolvedExecutable).parent.parent;
     final isWindows = Platform.isWindows;
     final candidates = [
+      if (isWindows) p.join(executableDir.path, 'ffmpeg.exe'), // same dir as diatonic.exe
       p.join(executableDir.path, 'Resources', isWindows ? 'ffmpeg.exe' : 'ffmpeg'),              // current location
       p.join(executableDir.path, 'MacOS', isWindows ? 'ffmpeg.exe' : 'ffmpeg'),                  // if moved beside main executable
       p.join(executableDir.path, 'MacOS', isWindows ? 'ffmpeg-helper.exe' : 'ffmpeg-helper'),    // optional renamed helper
     ];
     if (isWindows) {
-      candidates.insert(0, p.join('.', 'build', 'windows', 'x64', 'runner', 'Debug', 'ffmpeg.exe'));
-      candidates.insert(1, p.join('.', 'build', 'windows', 'x64', 'runner', 'Release', 'ffmpeg.exe'));
+      candidates.insert(1, p.join('.', 'build', 'windows', 'x64', 'runner', 'Debug', 'ffmpeg.exe'));
+      candidates.insert(2, p.join('.', 'build', 'windows', 'x64', 'runner', 'Release', 'ffmpeg.exe'));
     }
 
-    for (final c in candidates) {
+    debugPrint('FFmpeg path candidates:');
+    for (final c in candidates.whereType<String>()) {
+      debugPrint('  $c');
       final f = File(c);
       if (f.existsSync()) {
+        debugPrint('FFmpeg found at: $c');
         return c;
       }
     }
 
-    throw Exception('❌ ffmpeg binary not found in: ${candidates.join(', ')}');
+    debugPrint('❌ ffmpeg binary not found in any candidate location.');
+    throw Exception('❌ ffmpeg binary not found in: ${candidates.whereType<String>().join(', ')}');
   }
 }
 
