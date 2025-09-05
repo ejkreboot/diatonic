@@ -273,7 +273,7 @@
         <div class="status" id="formStatus" role="status" aria-live="polite"></div>
 
         <p class="subtitle center" style="margin-bottom:24px">Send a note here, or open an issue on <a href="https://github.com/ejkreboot/diatonic/issues" target="_blank" rel="noopener">GitHub</a> if you prefer.</p>
-        <form class="form" action="https://api.diatonic.org/api/create-issue" method="POST" accept-charset="UTF-8">
+  <form class="form" id="contactForm" action="https://api.diatonic.org/api/create-issue" method="POST" accept-charset="UTF-8">
           <div class="row">
             <div class="field">
               <label class="label" for="name">Name <span class="muted">(optional)</span></label>
@@ -287,10 +287,14 @@
           <div class="field">
             <label class="label" for="message">Message</label>
             <textarea class="textarea" id="message" name="message" required></textarea>
-            <div class="help">Please include any details that could help.</div>
           </div>
           <!-- Honeypot -->
           <div class="hide"><label>Leave empty<input type="text" name="hp" tabindex="-1" autocomplete="off" /></label></div>
+          <!-- Math challenge -->
+          <div class="field" id="math-challenge-field" style="margin: 18px 0; text-align: left; margin-bottom: 1.5em;">
+            <label class="label" id="math-challenge-label" for="math-challenge-input">Loading challenge…</label>
+            <input class="input" style="max-width:120px; display:inline-block; text-align: left; border-radius: 10px; border: 1px solid #ccc; padding: 0.3em 0.5em; display: block;" id="math-challenge-input" name="math_challenge" type="text" autocomplete="off" required />
+          </div>
           <div class="cta">
             <button class="btn primary" type="submit" id="sendBtn">Send message</button>
             <a class="btn" href="https://github.com/ejkreboot/diatonic/issues/new/choose" target="_blank" rel="noopener">Open a GitHub issue</a>
@@ -333,6 +337,29 @@
         url.searchParams.delete('contact_status');
         window.history.replaceState({}, '', url.pathname + url.search + url.hash);
       }
+
+      // Math challenge setup
+      var mathA = Math.floor(Math.random() * 8) + 2;
+      var mathB = Math.floor(Math.random() * 8) + 2;
+      var mathAnswer = mathA + mathB;
+      var mathLabel = document.getElementById('math-challenge-label');
+      var mathInput = document.getElementById('math-challenge-input');
+      if (mathLabel && mathInput) {
+        mathLabel.textContent = `Humanity check: what is ${mathA} + ${mathB}?`;
+        mathInput.value = '';
+      }
+
+      var form = document.getElementById('contactForm');
+      if (!form) return;
+      var btn = document.getElementById('sendBtn');
+      form.addEventListener('submit', function(e) {
+        if (mathInput && String(mathInput.value).trim() !== String(mathAnswer)) {
+          e.preventDefault();
+          status.textContent = 'Please answer the math question correctly.';
+          mathInput.focus();
+          return false;
+        }
+      });
     })();
 
   </script>
